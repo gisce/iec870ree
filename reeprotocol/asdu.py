@@ -6,11 +6,11 @@ class ParserException(Exception):
     pass
 
 
-class ASDUParser:
+class AsduParser:
     def __init__(self):
         self.asdu = None
 
-    def appendAndReturnIfFinished(self, bt):
+    def append_and_get_if_completed(self, bt):
         if self.asdu is None:
             self.create_asdu(bt)
 
@@ -56,12 +56,12 @@ class FixedAsdu:
 
     def parse(self):
         """
-        el primer byte es 0x10
-        el segundo byte es C, que es:
-           RES -  PRM -  FCB -  FCV -  Codigo de funcion
-        el tercer y cuarto byes es la direcci'on der
-        el quinto byte es el checksum
-        el sexto es el "end" 0x16
+        first byte byte is 0x10
+        second byte is C, that it:
+           RES -  PRM -  FCB -  FCV -  Function Code
+        Third and fourth bytes is DER address
+        Fifth byte is checksum
+        Sixth byte is "end" 0x16
         """
         if self.buffer[0] != FixedAsdu.INIT_BYTE:
             raise ParserException()
@@ -102,6 +102,116 @@ class FixedAsdu:
 class VariableAsdu:
     INIT_BYTE = 0x68
     END_BYTE = 0x16
+    EXTRA_LENGTH = 6
+
+    def __init__(self):
+        self.buffer = bytearray()
+        self.length = 0
+        self.c = Flags_CampoC()
+        self.c.asBytes = 0
+        self.der = 0
+
+        self.tipo = 0
+        self.cualificador_ev = 0
+        self.causa_tm = 0
+        self.dir_pm = 0
+        self.dir_registro = 0
+        self.data = bytearray()
+        self.content = None
+        self.checksum = 0
+
+    def append(self, bt):
+        self.buffer.append(bt)
+
+        if len(self.buffer) == 2:
+            self.length = bt
+
+        if (
+            len(self.buffer) > 2
+            and (len(self.buffer) > self.length + VariableAsdu.EXTRA_LENGTH)
+        ):
+            raise ParserException("Wrong length in variable length ASDU")
+
+        if self.length != 0 and self.completed:
+            self.parse()
+            return True
+
+        return False
+
+    @property
+    def completed(self):
+        return self.length + VariableAsdu.EXTRA_LENGTH == len(self.buffer)
+
+    def parse(self):
+        """
+        First byte is 0x10
+        Second byte is C, that is:
+           RES -  PRM -  FCB -  FCV -  Function Code
+        Third and fourth bytes is DER address
+        Fifth byte is checksum
+        Sixth byte is  "end" 0x16
+        """
+        if self.buffer[0] != VariableAsdu.INIT_BYTE:
+            raise ParserException()
+        self.length = self.buffer[1]
+        self.c.asByte = self.buffer[4]
+        self.der = struct.unpack("H", self.buffer[5:7])[0]
+        self.tipo = self.buffer[7]
+        self.cualificador_ev = self.buffer[8]
+        self.causa_tm = self.buffer[9]
+        self.dir_pm = struct.unpack("H", self.buffer[10:12])[0]
+        self.dir_registro = self.buffer[12]
+        # data from byte 13 to length - 9
+        self.data = self.buffer[13:self.length + 4]
+        # TODO WE HAVE TO PARSE DATA TO THE CORRECT TYPE
+        # self.content = VariableAsdu.types[self.tipo]()
+        # self.content.from_hex(self.data, self.cualificador_ev)
+        self.checksum = self.buffer[self.length + 4]
+        if self.buffer[self.length + 5] != VariableAsdu.END_BYTE:
+            raise ParserException("wrong end byte")
+        self.check_checksum()
+
+    def check_checksum(self):
+        checksum = 0
+        for i in range(4, self.length + 4):
+            checksum += self.buffer[i]
+        checksum = checksum % 256
+
+        if checksum != self.checksum:
+            raise ParserException("wrong checksum")
+
+    def generate(self):
+        del self.buffer[:]
+
+        if self.content is None:
+            self.length = len(self.data) + 9
+        else:
+            self.length = self.content.length
+
+        self.buffer.append(VariableAsdu.INIT_BYTE)
+        self.buffer.extend(struct.pack("B", self.length))
+        self.buffer.extend(struct.pack("B", self.length))
+        self.buffer.append(VariableAsdu.INIT_BYTE)
+        self.buffer.append(self.c.asByte)
+        self.buffer.extend(struct.pack("H", self.der))
+        if self.content is not None:
+            self.tipo = self.content.type
+        self.buffer.extend(struct.pack("B", self.tipo))
+        self.buffer.extend(struct.pack("B", self.cualificador_ev))
+        self.buffer.extend(struct.pack("B", self.causa_tm))
+        self.buffer.extend(struct.pack("H", self.dir_pm))
+        self.buffer.extend(struct.pack("B", self.dir_registro))
+        # TODO, THINK A BIT MORE ON THIS
+        if self.content is None:
+            self.buffer.extend(self.data)
+        else:
+            self.buffer.extend(self.content.to_bytes())
+        self.checksum = 0
+        for i in range(4, self.length + 4):
+            self.checksum += self.buffer[i]
+        self.checksum = self.checksum % 256
+        self.buffer.extend(struct.pack("B", self.checksum))
+        self.buffer.append(VariableAsdu.END_BYTE)
 
 
 c_uint8 = ctypes.c_uint8
