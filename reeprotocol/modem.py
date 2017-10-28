@@ -1,27 +1,42 @@
 from .protocol import PhysicalLayer
-import threading, queue
+import threading
+import queue
 import serial
 import time
 import logging
 
+
+class ModemException(Exception):
+    pass
+
+
 class Modem(PhysicalLayer):
     CONNECTED_WORDS = ["CONNECT", "REL ASYNC"]
 
-    def __init__(self, phone_number, serial_port = '/dev/ttyUSB0'):
+    def __init__(self, phone_number, serial_port='/dev/ttyUSB0'):
         self.phone_number = phone_number
         self.serial_port = serial_port
         self.connected = False
         self.data_mode = False
         self.queue = queue.Queue()
-                
+
     def connect(self):
         if (self.connected):
             return
+
+        try:
+            self.connect_port()
+            self.initialize_modem()
+        except Exception as e:
+            self.disconnect()
+            raise ConnectionError(e)
+
+    def connect_port(self):
         max_tries = 20
-        for i in range(1,max_tries+1):
+        for i in range(max_tries):
             try:
-                self.sport=serial.Serial(self.serial_port, baudrate=9600,
-                                        timeout = 1)
+                self.sport = serial.Serial(self.serial_port, baudrate=9600,
+                                           timeout=1)
                 break
             except serial.serialutil.SerialException as ex:
                 time.sleep(1)
@@ -31,30 +46,19 @@ class Modem(PhysicalLayer):
         self.dthread = threading.Thread(target=self.read_port,
                                         args=(self.queue,))
         self.dthread.start()
+
+    def initialize_modem(self):
         self.writeat("ATZ")
-        time.sleep(2)
+        time.sleep(2)  # at least two seconds after ATZ (reset) command
         self.writeat("AT+CBST=7,0,1")
-        time.sleep(5)
-        self.writeat("ATD" + str(self.phone_number) )
+        time.sleep(3)
+        self.writeat("ATD" + str(self.phone_number))
         self.waitforconnect()
         time.sleep(1)
 
-    def disconnect(self):
-        if not self.connected:
-            return
-        if self.data_mode:
-            time.sleep(1)
-            self.write("+++".encode("ascii"))
-            time.sleep(1)
-            self.data_mode = False
-        self.writeat("ATH0")
-        time.sleep(1)
-        self.connected = False
-        time.sleep(2)
-        self.sport.close()
-
     def waitforconnect(self):
-        for i in range(40):
+        max_tries = 40
+        for i in range(max_tries):
             try:
                 i = self.queue.get(False, 1)
                 logging.info("got message> " + i)
@@ -63,8 +67,7 @@ class Modem(PhysicalLayer):
                         logging.info("CONNECTED!!!!!!!!!!!!!!!!!!!!")
                         self.data_mode = True
                         self.queue.task_done()
-                        if "CONNECTED" not in i:
-                           time.sleep(10)
+                        time.sleep(5)  # everything smooth in read thread
                         return
                 self.queue.task_done()
             except queue.Empty:
@@ -72,14 +75,33 @@ class Modem(PhysicalLayer):
                 time.sleep(1)
         raise ConnectionError("Error Waiting for connection")
 
+    def disconnect(self):
+        if not self.connected:
+            return
+
+        try:
+            if self.data_mode:
+                time.sleep(1)
+                self.write("+++".encode("ascii"))
+                time.sleep(1)
+                self.data_mode = False
+            self.writeat("ATH0")
+            time.sleep(2)
+            self.sport.close()
+        finally:
+            self.data_mode = False
+            self.connected = False
+
     def send_byte(self, bt):
+        if not self.data_mode:
+            raise ModemException("modem not in datamode")
         self.write(bt)
 
     def get_byte(self):
-        if self.data_mode:
+        if not self.data_mode:
             raise ModemException("modem not in datamode")
-        return self.queue.get(False, 1)
-                
+        return self.queue.get(False, 2)
+
     def writeat(self, value):
         logging.info("sending command " + value)
         self.write((value + "\r").encode("ascii"))
@@ -91,18 +113,19 @@ class Modem(PhysicalLayer):
         self.sport.write(value)
 
     def read_port(self, read_queue):
-        logging.info ("read thread")
-        buffer=bytearray()
+        logging.info("read thread Starting")
+        buffer = bytearray()
         while self.connected:
+            logging.info("iterate read thread")
             response = self.sport.read(16)
             if not response:
                 continue
             logging.info("<-" + ":".join("%02x" % b for b in response))
-            
+
             for b in response:
-                #if not self.data_mode and (b == 0x0A or b == 0x0D):
+                # if not self.data_mode and (b == 0x0A or b == 0x0D):
                 if not self.data_mode:
-                    #answer with the line
+                    # answer with the line
                     buffer.append(b)
                     if (b == 0x0A):
                         logging.info("R-" + buffer.decode("ascii"))
@@ -111,5 +134,10 @@ class Modem(PhysicalLayer):
                 else:
                     read_queue.put(b)
 
-        logging.info ("read thread END")
-        
+        logging.info("read thread END")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.disconnect()
