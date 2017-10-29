@@ -2,7 +2,7 @@ import ctypes
 import struct
 
 
-class ParserException(Exception):
+class ParserException (Exception):
     pass
 
 
@@ -24,6 +24,8 @@ class AsduParser:
             self.asdu = FixedAsdu()
         elif init_byte == VariableAsdu.INIT_BYTE:
             self.asdu = VariableAsdu()
+        else:
+            raise ParserException("Wrong Init Byte {}".format(init_byte))
 
 
 class FixedAsdu:
