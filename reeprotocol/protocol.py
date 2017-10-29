@@ -15,7 +15,7 @@ class ProtocolException(Exception):
 class AppLayer(metaclass=ABCMeta):
 
     def initialize(self, link_layer):
-        self.link_layer
+        self.link_layer = link_layer
 
     def send_user_data(self, asdu):
         pass
@@ -48,7 +48,7 @@ class AppLayer(metaclass=ABCMeta):
 
     def authenticate(self, clave_pm):
         asdu = self.create_asdu_request(C_AC_NA_2(clave_pm))
-        for resp in self.proccess_request(asdu):
+        for resp in self.process_request(asdu):
             return resp
 
     def create_asdu_request(self, user_data, registro=0):
@@ -74,11 +74,11 @@ class LinkLayer(metaclass=ABCMeta):
     def __init__(self, der=None, dir_pm=None):
         self.der = der
         self.dir_pm = dir_pm
-
+        self._fcb = 0
+    
     def initialize(self, physical_layer):
         self.physical_layer = physical_layer
         self.asdu_parser = AsduParser()
-        self._fcb = 0
 
     def send_frame(self, frame):
         for bt in frame.buffer:

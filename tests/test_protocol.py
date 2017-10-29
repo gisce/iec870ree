@@ -64,10 +64,31 @@ class TestAppLayer(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_send_user_data(self):
+    def test_authenticate(self):
+        link_layer = MockLinkLayer(der = 1, dir_pm = 2)
+        link_layer.to_receive = [
+            base_asdu.FixedAsdu(),
+            base_asdu.VariableAsdu(),
+        ]
+        app_layer = protocol.AppLayer()
+        app_layer.initialize(link_layer)
+
+        app_layer.authenticate(3)
         pass
     
-        
+class MockLinkLayer(protocol.LinkLayer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.sent = []
+        self.to_receive = None
+
+    def send_frame(self, frame):
+        self.sent.append(frame)
+
+    def get_frame(self):
+        for r in self.to_receive:
+            yield r
+
 class MockPhysicalLayer(protocol.PhysicalLayer):
     def __init__(self):
         self.sent = bytearray()

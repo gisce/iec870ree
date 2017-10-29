@@ -48,7 +48,7 @@ class C_AC_NA_2(BaseAppAsdu):
         return output
 
 
-class C_FS_NA_2:
+class C_FS_NA_2(BaseAppAsdu):
     type = 187
 
     def from_hex(self, data, cualificador_ev):
@@ -64,6 +64,77 @@ class C_FS_NA_2:
     def __repr__(self):
         output = " -- C_FS_NA_2 Begin -- \n"
         output += " -- C_FS_NA_2 End \n"
+        return output
+
+
+class C_CI_NU_2(BaseAppAsdu):
+    type = 123
+
+    def __init__(self, start_date=datetime.datetime.now(),
+                 end_date=datetime.datetime.now()):
+        self.primer_integrado = 1
+        self.ultimo_integrado = 8
+        self.tiempo_inicial = TimeA(start_date)
+        self.tiempo_final = TimeA(end_date)
+
+    def from_hex(self, data, cualificador_ev):
+        self.primer_integrado = struct.unpack("B", data[0:1])[0]
+        self.ultimo_integrado = struct.unpack("B", data[1:2])[0]
+        self.tiempo_inicial.from_hex(data[2:7])
+        self.tiempo_final.from_hex(data[7:12])
+
+    @property
+    def length(self):
+        return 0x15
+
+    def to_bytes(self):
+        response = bytearray()
+        response.extend(struct.pack("B", self.primer_integrado))
+        response.extend(struct.pack("B", self.ultimo_integrado))
+        response.extend(self.tiempo_inicial.to_bytes())
+        response.extend(self.tiempo_final.to_bytes())
+        return response
+
+    def __repr__(self):
+        output = " -- C_CI_NU_2 Begin -- \n"
+        output += "  primer_integrado: " + str(self.primer_integrado) + "\n"
+        output += "  ultimo_integrado: " + str(self.ultimo_integrado) + "\n"
+        output += "  tiempo_inicial: " + str(self.tiempo_inicial) + "\n"
+        output += "  tiempo_final: " + str(self.tiempo_final) + "\n"
+        output += " -- C_CI_NU_2 End \n"
+        return output
+
+
+class M_IT_TK_2:
+    type = 11
+
+    def __init__(self):
+        self.valores = []
+        self.tiempo = None
+        pass
+
+    def from_hex(self, data, cualificador_ev):
+        for i in range(0, cualificador_ev):
+            position = i * 6  # 1 byte de typo 4 de medida 1 de cualificador
+            # total integrado (4 octetos de energía+1 octeto con cualificadores
+            # y número de secuencia), para cada uno de los totales.
+            direccion_objeto = struct.unpack("B", data[position:position+1])[0]
+            total_integrado = struct.unpack("I",
+                                            data[position + 1:position + 5])[0]
+            cualificador = struct.unpack("B", data[position+5:position+6])[0]
+            self.valores.append((direccion_objeto,
+                                 total_integrado, cualificador))
+        position = position + 6
+        # ok, ahora el tiempo
+        self.tiempo = TimeA()
+        self.tiempo.from_hex(data[position:position+5])
+
+    def __repr__(self):
+        output = " -- M_IT_TK_2 Begin -- \n"
+        output += ("   contadores (direccion objeto, total integrado"
+                   ", cualificador) " + str(self.valores) + "\n")
+        output += "   tiempo: " + str(self.tiempo) + "\n"
+        output += " -- M_IT_TK_2 End \n"
         return output
 
 
@@ -109,7 +180,7 @@ class TimeA():
         self.PTI = bitstring.BitArray(reversed(reversed_bits.read(2))).uint
         self.year = bitstring.BitArray(reversed(reversed_bits.read(7))).uint
         self.RES2 = reversed_bits.read(1).uint
-        
+
     def to_bytes(self):
         response = bitstring.BitArray()
         thedata = bitstring.BitArray(bytes([self.minute]))
@@ -122,26 +193,25 @@ class TimeA():
         response = response + thedata[-1:-6:-1]
         thedata = bitstring.BitArray(bytes([self.RES1]))
         response = response + thedata[-1:-3:-1]
-        thedata = bitstring.BitArray (bytes([self.SU]))
+        thedata = bitstring.BitArray(bytes([self.SU]))
         response = response + thedata[-1:]
-        thedata = bitstring.BitArray (bytes([self.dayofmonth]))
+        thedata = bitstring.BitArray(bytes([self.dayofmonth]))
         response = response + thedata[-1:-6:-1]
-        thedata = bitstring.BitArray (bytes([self.dayofweek]))
+        thedata = bitstring.BitArray(bytes([self.dayofweek]))
         response = response + thedata[-1:-4:-1]
-        thedata = bitstring.BitArray (bytes([self.month]))
+        thedata = bitstring.BitArray(bytes([self.month]))
         response = response + thedata[-1:-5:-1]
-        thedata = bitstring.BitArray (bytes([self.ETI]))
+        thedata = bitstring.BitArray(bytes([self.ETI]))
         response = response + thedata[-1:-3:-1]
-        thedata = bitstring.BitArray (bytes([self.PTI]))
+        thedata = bitstring.BitArray(bytes([self.PTI]))
         response = response + thedata[-1:-3:-1]
-        thedata = bitstring.BitArray (bytes([self.year]))
+        thedata = bitstring.BitArray(bytes([self.year]))
         response = response + thedata[-1:-8:-1]
-        thedata = bitstring.BitArray (bytes([self.RES2]))
+        thedata = bitstring.BitArray(bytes([self.RES2]))
         response = response + thedata[-1:]
         response = response[::-1]
         inbytes = response.tobytes()[::-1]
         return inbytes
-
 
     @property
     def datetime(self):
