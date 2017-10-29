@@ -1,5 +1,6 @@
 import ctypes
 import struct
+from .app_asdu import AppAsduRegistry
 
 
 class ParserException (Exception):
@@ -166,8 +167,8 @@ class VariableAsdu:
         # data from byte 13 to length - 9
         self.data = self.buffer[13:self.length + 4]
         # TODO WE HAVE TO PARSE DATA TO THE CORRECT TYPE
-        # self.content = VariableAsdu.types[self.tipo]()
-        # self.content.from_hex(self.data, self.cualificador_ev)
+        self.content = AppAsduRegistry.types[self.tipo]()
+        self.content.from_hex(self.data, self.cualificador_ev)
         self.checksum = self.buffer[self.length + 4]
         if self.buffer[self.length + 5] != VariableAsdu.END_BYTE:
             raise ParserException("wrong end byte")

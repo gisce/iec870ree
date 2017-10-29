@@ -56,7 +56,17 @@ class TestLinkLayer(unittest.TestCase):
 
         physical_layer.to_receive =  bytes.fromhex("10 00 95 d1 66 16")
         link_layer.remote_link_reposition()
-        
+
+class TestAppLayer(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_send_user_data(self):
+        pass
+    
         
 class MockPhysicalLayer(protocol.PhysicalLayer):
     def __init__(self):
