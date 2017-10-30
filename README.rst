@@ -1,6 +1,11 @@
 reeprotocol
 ###########
 
+.. image:: https://travis-ci.org/javierdelapuente/reeprotocol.svg?branch=master
+    :target: https://travis-ci.org/javierdelapuente/reeprotocol
+
+
+
 IEC-870-5-102 for REE Spanish Electric meters
 
 Based on http://www.ree.es/sites/default/files/01_ACTIVIDADES/Documentos/Documentacion-Simel/protoc_RMCM10042002.pdf
