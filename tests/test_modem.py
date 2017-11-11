@@ -51,7 +51,7 @@ class TestModem(unittest.TestCase):
             self.assertEqual(bt, ord('\n'))
         
     @patch('serial.Serial')
-    def test_send_byte(self, Serial):
+    def test_send_bytes(self, Serial):
         mock = MockSerial()
         Serial.return_value = mock
         phone_number = '636813395'
@@ -62,7 +62,7 @@ class TestModem(unittest.TestCase):
             m.sport.data_mode = True
             time.sleep(2)
             bt = b'A'
-            m.send_byte(bt)
+            m.send_bytes(bt)
             self.assertEqual(m.sport.last_command, b'A')
 
     

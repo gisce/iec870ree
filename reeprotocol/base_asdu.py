@@ -216,6 +216,25 @@ class VariableAsdu:
         self.buffer.extend(struct.pack("B", self.checksum))
         self.buffer.append(VariableAsdu.END_BYTE)
 
+    def __repr__(self):
+        output = "----- VariableAsdu Begin -----\n"
+        output += " length: " + str(self.length) + "\n"
+        output += (" RES: " + str(self.c.res) + " PRM: "+ str(self.c.prm)
+                   + " FCB: " + str(self.c.fcb) + " FCV: " + str(self.c.fcv) 
+                   + " CF(cod. funcion): " + str(self.c.cf) + "\n")
+        output +=  " DER: " + str(self.der) + "\n"
+        output +=  " TIPO: " + str(self.tipo) + " " + hex(self.tipo) + "\n"
+        output +=  " cualificador estructura variable: " + str(self.cualificador_ev) + "\n"
+        output += " causa transmision: " + str(self.causa_tm) + " " + hex(self.causa_tm) +"\n"
+        output += " direccion punto medida: " + str(self.dir_pm) + "\n"
+        output += " direccion registro: " + str(self.dir_registro) + "\n"
+        output += " CONTENIDO: " + (":".join("%02x" % b for b in self.data)) + "\n"
+        output += str(self.content) 
+        output += " checksum: " + str(self.checksum) + " " +hex(self.checksum) +  "\n"
+        output += " " + (":".join("%02x" % b for b in self.buffer)) + "\n"
+        output += "----- VariableAsdu End -----"
+        return output
+        
 
 c_uint8 = ctypes.c_uint8
 

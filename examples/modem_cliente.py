@@ -1,4 +1,5 @@
 import sys
+import logging
 from os.path import dirname, realpath, sep, pardir
 library_path = dirname(realpath(__file__)) + sep + pardir
 sys.path.append(library_path)
@@ -17,6 +18,11 @@ def run_example(port, phone_number, der, dir_pm, clave_pm):
     app_layer.initialize(link_layer)
 
     physical_layer.connect()
+    link_layer.link_state_request()
+    link_layer.remote_link_reposition()
+    resp = app_layer.authenticate(clave_pm)
+    logging.info("authenticate response {}".format(resp))
+    physical_layer.disconnect()
     
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)

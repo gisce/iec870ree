@@ -81,13 +81,12 @@ class LinkLayer(metaclass=ABCMeta):
         self.asdu_parser = AsduParser()
 
     def send_frame(self, frame):
-        for bt in frame.buffer:
-            self.physical_layer.send_byte(bt)
+        self.physical_layer.send_bytes(frame.buffer)
 
-    def get_frame(self):
+    def get_frame(self, timeout = 60):
         frame = None
         while not frame:
-            bt = self.physical_layer.get_byte(self)
+            bt = self.physical_layer.get_byte(timeout)
             frame = self.asdu_parser.append_and_get_if_completed(bt)
         return frame
 
@@ -140,6 +139,10 @@ class PhysicalLayer(metaclass=ABCMeta):
     def send_byte(self, byte):
         pass
 
+    def send_bytes(self, bts):
+        for byte in bts:
+            self.send_byte(byte)
+    
     @abstractmethod
-    def get_byte(self):
+    def get_byte(self, timeout):
         pass

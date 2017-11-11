@@ -102,12 +102,17 @@ class Modem(PhysicalLayer):
     def send_byte(self, bt):
         if not self.data_mode:
             raise ModemException("modem not in datamode")
-        self.write(bt)
+        self.write(bytes([bt]))
 
-    def get_byte(self):
+    def send_bytes(self, bt):
         if not self.data_mode:
             raise ModemException("modem not in datamode")
-        return self.queue.get(False, 2)
+        self.write(bt)
+        
+    def get_byte(self, timeout = 60):
+        if not self.data_mode:
+            raise ModemException("modem not in datamode")
+        return self.queue.get(True, timeout)
 
     def writeat(self, value):
         logger.info("sending command " + value)
