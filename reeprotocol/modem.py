@@ -5,6 +5,7 @@ import serial
 import time
 import logging
 
+logger = logging.getLogger('reeprotocol')
 
 class ModemException(Exception):
     pass
@@ -34,14 +35,20 @@ class Modem(PhysicalLayer):
     def connect_port(self):
         max_tries = 20
         for i in range(max_tries):
+            logger.info("try open port {}".format(i))
             try:
                 self.sport = serial.Serial(self.serial_port, baudrate=9600,
                                            timeout=1)
+                logger.info("serial port {} opened".format(self.serial_port))
                 break
             except serial.serialutil.SerialException as ex:
+                logger.warning("error connectiong {}".format(ex))
                 time.sleep(1)
                 if (i >= max_tries or "Permission" not in str(ex)):
                     raise ex
+        else:
+            raise ModemException("couldn't connect to port {}".format(self.serial_port))
+                    
         self.connected = True
         self.dthread = threading.Thread(target=self.read_port,
                                         args=(self.queue,))
@@ -61,17 +68,17 @@ class Modem(PhysicalLayer):
         for i in range(max_tries):
             try:
                 i = self.queue.get(False, 1)
-                logging.info("got message> " + i)
+                logger.info("got message> " + i)
                 for word in Modem.CONNECTED_WORDS:
                     if word in i:
-                        logging.info("CONNECTED!!!!!!!!!!!!!!!!!!!!")
+                        logger.info("CONNECTED!!!!!!!!!!!!!!!!!!!!")
                         self.data_mode = True
                         self.queue.task_done()
                         time.sleep(5)  # everything smooth in read thread
                         return
                 self.queue.task_done()
             except queue.Empty:
-                logging.info("nothing yet...")
+                logger.info("nothing yet...")
                 time.sleep(1)
         raise ConnectionError("Error Waiting for connection")
 
@@ -103,24 +110,24 @@ class Modem(PhysicalLayer):
         return self.queue.get(False, 2)
 
     def writeat(self, value):
-        logging.info("sending command " + value)
+        logger.info("sending command " + value)
         self.write((value + "\r").encode("ascii"))
 
     def write(self, value):
         if not self.connected:
             raise ModemException("modem not connected")
-        logging.info("->" + ":".join("%02x" % b for b in value))
+        logger.info("->" + ":".join("%02x" % b for b in value))
         self.sport.write(value)
 
     def read_port(self, read_queue):
-        logging.info("read thread Starting")
+        logger.info("read thread Starting")
         buffer = bytearray()
         while self.connected:
-            logging.info("iterate read thread")
+            logger.info("iterate read thread")
             response = self.sport.read(16)
             if not response:
                 continue
-            logging.info("<-" + ":".join("%02x" % b for b in response))
+            logger.info("<-" + ":".join("%02x" % b for b in response))
 
             for b in response:
                 # if not self.data_mode and (b == 0x0A or b == 0x0D):
@@ -128,13 +135,13 @@ class Modem(PhysicalLayer):
                     # answer with the line
                     buffer.append(b)
                     if (b == 0x0A):
-                        logging.info("R-" + buffer.decode("ascii"))
+                        logger.info("R-" + buffer.decode("ascii"))
                         read_queue.put(buffer.decode("ascii"))
                         del buffer[:]
                 else:
                     read_queue.put(b)
 
-        logging.info("read thread END")
+        logger.info("read thread END")
 
     def __enter__(self):
         return self

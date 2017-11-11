@@ -16,7 +16,7 @@ setup(
     license=license,
     keywords="REE electric meters IEC 870-5-102",
     url="http://www.javierdelapuente.com",
-    packages=find_packages(exclude=('tests', 'docs')),
+    packages=find_packages(exclude=('tests', 'docs', 'examples')),
     long_description=readme,
     classifiers=[
         "Development Status :: 1 - Planning",
