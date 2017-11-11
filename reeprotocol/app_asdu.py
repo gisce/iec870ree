@@ -105,7 +105,7 @@ class C_CI_NU_2(BaseAppAsdu):
         return output
 
 
-class M_IT_TK_2:
+class M_IT_TK_2(BaseAppAsdu):
     type = 11
 
     def __init__(self):

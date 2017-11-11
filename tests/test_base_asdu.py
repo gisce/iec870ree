@@ -22,6 +22,7 @@ class TestASDUParser(unittest.TestCase):
         for b in var_asdu:
             asdu = parser.append_and_get_if_completed(b)
         self.assertIsInstance(asdu, reeprotocol.base_asdu.VariableAsdu)
+        asdurepresentation = str(asdu)
 
 class TestFixedAsdu(unittest.TestCase):
     

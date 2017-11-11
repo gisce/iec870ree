@@ -5,8 +5,10 @@ from .base_asdu import (
 )
 from .app_asdu import (
     C_AC_NA_2,
+    C_CI_NU_2,    
 )
 
+logger = logging.getLogger('reeprotocol')
 
 class ProtocolException(Exception):
     pass
@@ -28,6 +30,11 @@ class AppLayer(metaclass=ABCMeta):
         asdu_ack = self.link_layer.get_frame()
         if not asdu_ack:
             raise ProtocolException("Didn't get ACK")
+        return self.process_requestresponse()
+
+    def process_requestresponse(self):
+        """ this function makes a very ugly assumption,
+        if you don't iterate over all elements, the program will fail"""
         # TODO CHECK CORRECK ACK
         while True:
             asdu = FixedAsdu()
@@ -44,13 +51,22 @@ class AppLayer(metaclass=ABCMeta):
                 raise ProtocolException("Didn't ASDU")
             yield asdu_resp
             if asdu_resp.causa_tm in (0x0A, 0x07):
+                logger.info("Process Request Message End")
                 break
 
     def authenticate(self, clave_pm):
         asdu = self.create_asdu_request(C_AC_NA_2(clave_pm))
-        for resp in self.process_request(asdu):
-            return resp
+        resps = list(self.process_request(asdu))
+        return resps[0]
 
+    def read_integrated_totals(self, start_date, end_date, register = 11):
+        asdu = self.create_asdu_request(C_CI_NU_2(start_date, end_date),
+                                        register)
+        #do not remove this as we have to iterate over physical layer frames.
+        resps = list(self.process_request(asdu))
+        for resp in self.process_requestresponse():
+            yield resp
+            
     def create_asdu_request(self, user_data, registro=0):
         asdu = VariableAsdu()
         asdu.c.res = 0
@@ -81,6 +97,7 @@ class LinkLayer(metaclass=ABCMeta):
         self.asdu_parser = AsduParser()
 
     def send_frame(self, frame):
+        logger.info("sending frame {}".format(frame))
         self.physical_layer.send_bytes(frame.buffer)
 
     def get_frame(self, timeout = 60):
@@ -88,6 +105,7 @@ class LinkLayer(metaclass=ABCMeta):
         while not frame:
             bt = self.physical_layer.get_byte(timeout)
             frame = self.asdu_parser.append_and_get_if_completed(bt)
+        logger.info("receiving frame {}".format(frame))
         return frame
 
     def link_state_request(self):

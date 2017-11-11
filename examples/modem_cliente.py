@@ -9,6 +9,7 @@ import logging
 import reeprotocol
 import reeprotocol.modem
 import reeprotocol.protocol
+import datetime
 
 def run_example(port, phone_number, der, dir_pm, clave_pm):
     physical_layer = reeprotocol.modem.Modem(phone_number, port)
@@ -20,8 +21,14 @@ def run_example(port, phone_number, der, dir_pm, clave_pm):
     physical_layer.connect()
     link_layer.link_state_request()
     link_layer.remote_link_reposition()
+    logging.info("before authentication")
     resp = app_layer.authenticate(clave_pm)
-    logging.info("authenticate response {}".format(resp))
+    logging.info("CLIENTE authenticate response {}".format(resp))
+    logging.info("before read")
+    for resp in app_layer\
+        .read_integrated_totals(datetime.datetime(2017, 11, 11, 9, 0),
+                                datetime.datetime(2017, 11, 11, 13, 0)):
+        logging.info("read response {}".format(resp))
     physical_layer.disconnect()
     
 if __name__ == "__main__":
