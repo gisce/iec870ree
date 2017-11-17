@@ -158,6 +158,10 @@ class PhysicalLayer(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def disconnect(self):
+        pass
+
+    @abstractmethod
     def send_byte(self, byte):
         pass
 

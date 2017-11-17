@@ -95,6 +95,13 @@ class MockLinkLayer(protocol.LinkLayer):
         return elem
 
 class MockPhysicalLayer(protocol.PhysicalLayer):
+
+    def connect(self):
+        pass
+
+    def disconnect(self):
+        pass
+
     def __init__(self):
         self.sent = bytearray()
         self.to_receive = None
