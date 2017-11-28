@@ -5,6 +5,7 @@ import logging
 import socket
 import queue
 import threading
+import binascii
 from .protocol import PhysicalLayer
 
 
@@ -29,6 +30,7 @@ class Ip(PhysicalLayer):
         """Connect to `self.addr`
         """
         self.connection = socket.create_connection(self.addr)
+        self.connection.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.connected = True
         self.thread.start()
         logger.debug("Connection with %s created", self.addr)
@@ -51,19 +53,26 @@ class Ip(PhysicalLayer):
                 continue
             logger.debug(
                 "<= Reading %s from %s",
-                ":".join("%02x" % b for b in response),
+                binascii.hexlify(response),
                 self.addr
             )
             for byte_resp in response:
                 self.queue.put(byte_resp)
         logger.debug("Stopping reading port for %s", self.addr)
+        self.queue.put(None)
 
     def send_byte(self, byte):
         """Send a byte"""
         assert isinstance(self.connection, socket.socket)
         logger.debug("=> Sending %02x to %s", byte, self.addr)
-        self.connection.send(byte)
+        self.connection.send(bytes([byte]))
+
+    def send_bytes(self, bts):
+        assert isinstance(self.connection, socket.socket)
+        logger.debug("=> Sending %s to %s", binascii.hexlify(bts), self.addr)
+        self.connection.send(bts)
 
     def get_byte(self, timeout=60):
         """Read a byte"""
-        return self.queue.get(True, timeout=timeout)
+        logger.debug("Getting byte")
+        return self.queue.get(True, timeout=60)
