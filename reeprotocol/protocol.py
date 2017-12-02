@@ -98,6 +98,7 @@ class LinkLayer(metaclass=ABCMeta):
 
     def send_frame(self, frame):
         logger.info("sending frame {}".format(frame))
+        logging.info("->" + ":".join("%02x" % b for b in frame.buffer))
         self.physical_layer.send_bytes(frame.buffer)
 
     def get_frame(self, timeout = 60):

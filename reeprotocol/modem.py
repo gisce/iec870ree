@@ -5,7 +5,7 @@ import serial
 import time
 import logging
 
-logger = logging.getLogger('reeprotocol')
+logger = logging.getLogger('reeprotocol.modem')
 
 class ModemException(Exception):
     pass
@@ -20,7 +20,7 @@ class Modem(PhysicalLayer):
         self.connected = False
         self.data_mode = False
         self.queue = queue.Queue()
-
+ 
     def connect(self):
         if (self.connected):
             return
@@ -47,7 +47,8 @@ class Modem(PhysicalLayer):
                 if (i >= max_tries or "Permission" not in str(ex)):
                     raise ex
         else:
-            raise ModemException("couldn't connect to port {}".format(self.serial_port))
+            raise ModemException("couldn't connect to port {}".format(
+                self.serial_port))
                     
         self.connected = True
         self.dthread = threading.Thread(target=self.read_port,
