@@ -29,6 +29,7 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         .read_integrated_totals(datetime.datetime(2017, 12, 1, 9, 0),
                                 datetime.datetime(2017, 12, 1, 13, 0)):
         logging.info("read response {}".format(resp))
+    app_layer.finish_session()
     physical_layer.disconnect()
     
 if __name__ == "__main__":

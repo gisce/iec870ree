@@ -26,9 +26,10 @@ def run_example(port, phone_number, der, dir_pm, clave_pm):
     logging.info("CLIENTE authenticate response {}".format(resp))
     logging.info("before read")
     for resp in app_layer\
-        .read_integrated_totals(datetime.datetime(2017, 11, 11, 9, 0),
-                                datetime.datetime(2017, 11, 11, 13, 0)):
+        .read_integrated_totals(datetime.datetime(2017, 6, 11, 9, 0),
+                                datetime.datetime(2017, 6, 11, 13, 0)):
         logging.info("read response {}".format(resp))
+    app_layer.finish_session()
     physical_layer.disconnect()
     
 if __name__ == "__main__":

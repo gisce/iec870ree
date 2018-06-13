@@ -56,7 +56,7 @@ class C_FS_NA_2(BaseAppAsdu):
 
     @property
     def length(self):
-        return 0x0d
+        return 0x09
 
     def to_bytes(self):
         return bytes()

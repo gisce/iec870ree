@@ -3,9 +3,11 @@ from abc import ABCMeta, abstractmethod
 from .base_asdu import (
     AsduParser, FixedAsdu, VariableAsdu
 )
+import traceback
 from .app_asdu import (
     C_AC_NA_2,
-    C_CI_NU_2,    
+    C_CI_NU_2,
+    C_FS_NA_2,
 )
 
 logger = logging.getLogger('reeprotocol')
@@ -13,6 +15,11 @@ logger = logging.getLogger('reeprotocol')
 class ProtocolException(Exception):
     pass
 
+class IntegrationPeriodNotAvailable(Exception):
+    pass
+
+class RequestedASDUTypeNotAvailable(Exception):
+    pass
 
 class AppLayer(metaclass=ABCMeta):
 
@@ -48,24 +55,44 @@ class AppLayer(metaclass=ABCMeta):
             self.link_layer.send_frame(asdu)
             asdu_resp = self.link_layer.get_frame()
             if not asdu_resp:
-                raise ProtocolException("Didn't ASDU")
+                raise ProtocolException("Didn't get ASDU")
             yield asdu_resp
-            if asdu_resp.causa_tm in (0x0A, 0x07):
-                logger.info("Process Request Message End")
+
+            if asdu_resp.causa_tm  == 0x07:
+                logger.info("activation confirmation")
                 break
+            if asdu_resp.causa_tm  == 0x0A:
+                logger.info("Activation terminated")
+                break
+            if asdu_resp.causa_tm  == 0x0E:
+                logger.info("requested ASDU-type not available")
+                raise RequestedASDUTypeNotAvailable()
+            if asdu_resp.causa_tm == 0x12:
+                logger.info("requested integration period not available")
+                raise IntegrationPeriodNotAvailable()
 
     def authenticate(self, clave_pm):
         asdu = self.create_asdu_request(C_AC_NA_2(clave_pm))
         resps = list(self.process_request(asdu))
         return resps[0]
 
+    def finish_session(self):
+        asdu = self.create_asdu_request(C_FS_NA_2())
+        try:
+            resps = list(self.process_request(asdu))
+        except Exception as e:
+            logger.exception("error finishing session {}".format(e))
+        
     def read_integrated_totals(self, start_date, end_date, register = 11):
         asdu = self.create_asdu_request(C_CI_NU_2(start_date, end_date),
                                         register)
         #do not remove this as we have to iterate over physical layer frames.
-        resps = list(self.process_request(asdu))
-        for resp in self.process_requestresponse():
-            yield resp
+        try:
+            resps = list(self.process_request(asdu))
+            for resp in self.process_requestresponse():
+                yield resp
+        except IntegrationPeriodNotAvailable as e:
+            pass
             
     def create_asdu_request(self, user_data, registro=0):
         asdu = VariableAsdu()
@@ -85,6 +112,8 @@ class AppLayer(metaclass=ABCMeta):
         return asdu
 
 
+
+    
 class LinkLayer(metaclass=ABCMeta):
 
     def __init__(self, der=None, dir_pm=None):
