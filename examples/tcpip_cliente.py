@@ -12,6 +12,9 @@ import reeprotocol.protocol
 import datetime
 
 def run_example(ip, port, der, dir_pm, clave_pm):
+    end_date = datetime.datetime.now()
+    start_date = end_date - datetime.timedelta(days = 2)
+    
     physical_layer = reeprotocol.tcpip.TcpIp(ip, port)
     link_layer = reeprotocol.protocol.LinkLayer(der, dir_pm)
     link_layer.initialize(physical_layer)
@@ -25,15 +28,13 @@ def run_example(ip, port, der, dir_pm, clave_pm):
     resp = app_layer.authenticate(clave_pm)
     logging.info("CLIENTE authenticate response {}".format(resp))
     logging.info("before read")
-    for resp in app_layer\
-        .read_integrated_totals(datetime.datetime(2017, 12, 1, 9, 0),
-                                datetime.datetime(2017, 12, 1, 13, 0)):
+    for resp in app_layer.read_integrated_totals(start_date, end_date):
         logging.info("read response {}".format(resp))
     app_layer.finish_session()
     physical_layer.disconnect()
     
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     
     argv = sys.argv[1:]
     try:

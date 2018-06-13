@@ -122,18 +122,18 @@ class Modem(PhysicalLayer):
     def write(self, value):
         if not self.connected:
             raise ModemException("modem not connected")
-        logger.info("->" + ":".join("%02x" % b for b in value))
+        logger.debug("->" + ":".join("%02x" % b for b in value))
         self.sport.write(value)
 
     def read_port(self, read_queue):
         logger.info("read thread Starting")
         buffer = bytearray()
         while self.connected:
-            logger.info("iterate read thread")
-            response = self.sport.read(16)
+            logger.debug("iterate read thread")
+            response = self.sport.read(1)
             if not response:
                 continue
-            logger.info("<-" + ":".join("%02x" % b for b in response))
+            logger.debug("<-" + ":".join("%02x" % b for b in response))
 
             for b in response:
                 # if not self.data_mode and (b == 0x0A or b == 0x0D):
