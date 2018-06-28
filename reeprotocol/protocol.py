@@ -184,6 +184,14 @@ class LinkLayer(metaclass=ABCMeta):
 class PhysicalLayer(metaclass=ABCMeta):
 
     @abstractmethod
+    def connect(self):
+        pass
+
+    @abstractmethod
+    def disconnect(self):
+        pass
+
+    @abstractmethod
     def send_byte(self, byte):
         pass
 
