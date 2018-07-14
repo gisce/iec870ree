@@ -126,7 +126,7 @@ class LinkLayer(metaclass=ABCMeta):
         self.asdu_parser = AsduParser()
 
     def send_frame(self, frame):
-        logger.info("sending frame {}".format(frame))
+        logger.info("sending frame\n {}".format(frame))
         logging.info("->" + ":".join("%02x" % b for b in frame.buffer))
         self.physical_layer.send_bytes(frame.buffer)
 

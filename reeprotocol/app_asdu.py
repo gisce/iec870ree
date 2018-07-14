@@ -19,7 +19,24 @@ class AppAsduRegistry(type):
 
 
 class BaseAppAsdu(metaclass=AppAsduRegistry):
-    pass
+
+    @property
+    def values(self):
+        return "\n".join([
+            "    {}: {}".format(k, v) for k,v in vars(self).items()
+        ])
+    
+    def __repr__(self):
+        return '\n'.join([
+            " -- {class_name} Begin --",
+            "{values}",
+            " -- {class_name} End --"
+        ]).format(
+            class_name=self.__class__.__name__,
+            values=self.values
+        )
+
+
 
 
 class C_AC_NA_2(BaseAppAsdu):
@@ -61,11 +78,6 @@ class C_FS_NA_2(BaseAppAsdu):
     def to_bytes(self):
         return bytes()
 
-    def __repr__(self):
-        output = " -- C_FS_NA_2 Begin -- \n"
-        output += " -- C_FS_NA_2 End \n"
-        return output
-
 
 class C_CI_NU_2(BaseAppAsdu):
     type = 123
@@ -95,15 +107,6 @@ class C_CI_NU_2(BaseAppAsdu):
         response.extend(self.tiempo_final.to_bytes())
         return response
 
-    def __repr__(self):
-        output = " -- C_CI_NU_2 Begin -- \n"
-        output += "  primer_integrado: " + str(self.primer_integrado) + "\n"
-        output += "  ultimo_integrado: " + str(self.ultimo_integrado) + "\n"
-        output += "  tiempo_inicial: " + str(self.tiempo_inicial) + "\n"
-        output += "  tiempo_final: " + str(self.tiempo_final) + "\n"
-        output += " -- C_CI_NU_2 End \n"
-        return output
-
 
 class M_IT_TK_2(BaseAppAsdu):
     type = 11
@@ -128,14 +131,6 @@ class M_IT_TK_2(BaseAppAsdu):
         # ok, ahora el tiempo
         self.tiempo = TimeA()
         self.tiempo.from_hex(data[position:position+5])
-
-    def __repr__(self):
-        output = " -- M_IT_TK_2 Begin -- \n"
-        output += ("   contadores (direccion objeto, total integrado"
-                   ", cualificador) " + str(self.valores) + "\n")
-        output += "   tiempo: " + str(self.tiempo) + "\n"
-        output += " -- M_IT_TK_2 End \n"
-        return output
 
 
 class TimeA():
