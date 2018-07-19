@@ -3,6 +3,18 @@ import struct
 import datetime
 
 
+__all__ = [
+    'C_AC_NA_2',
+    'C_CI_NU_2',
+    'C_FS_NA_2',
+    'C_TI_NA_2',
+    'C_RD_NA_2',
+    'M_IT_TK_2',
+    'M_TI_TA_2',
+    'P_MP_NA_2'
+]
+
+
 class AppAsduRegistry(type):
     types = dict()
 
@@ -37,7 +49,63 @@ class BaseAppAsdu(metaclass=AppAsduRegistry):
         )
 
 
+class C_TI_NA_2(BaseAppAsdu):
+    """
+    Leer fecha y hora actuales
+    """
+    type = 103
+    
+    def to_bytes(self):
+        return bytes()
 
+    def from_hex(self, data, cualificador_ev):
+        pass
+
+class P_MP_NA_2(BaseAppAsdu):
+    """
+    Leer el código de fabricante e identificador de equipo
+    """
+    type = 71
+    data_length = 0x06
+
+    def __init__(self):
+        self.codigo_fabricante = None
+        self.codigo_equipo = None
+
+    def to_bytes(self):
+        return bytes()
+
+    def from_hex(self, data, cualificador_ev):
+        self.codigo_fabricante = struct.unpack("B", data[1:2])[0]
+        self.codigo_equipo = struct.unpack("I", data[2:6])[0]
+
+
+class M_TI_TA_2(BaseAppAsdu):
+    """
+    Fecha y hora actuales
+    """
+    type = 72
+
+    def __init__(self):
+        self.tiempo = None
+
+    def from_hex(self, data, cualificador_ev):
+        self.tiempo = TimeA()
+        self.tiempo.from_hex(data)
+
+
+class C_RD_NA_2(BaseAppAsdu):
+    """
+    Leer el código de fabricante e identificador de equipo
+    """
+    type = 100
+    causa_tm = 5
+    
+    def to_bytes(self):
+        return bytes()
+
+    def from_hex(self, data, cualificador_ev):
+        pass
 
 class C_AC_NA_2(BaseAppAsdu):
     """
@@ -58,14 +126,12 @@ class C_AC_NA_2(BaseAppAsdu):
     def to_bytes(self):
         return struct.pack("I", self.clave)
 
-    def __repr__(self):
-        output = " -- C_AC_NA_2 Begin -- \n"
-        output += "  clave: " + str(self.clave) + "\n"
-        output += " -- C_AC_NA_2 End \n"
-        return output
-
 
 class C_FS_NA_2(BaseAppAsdu):
+    """
+    Finalizar sesión
+    """
+
     type = 187
 
     def from_hex(self, data, cualificador_ev):
