@@ -9,6 +9,17 @@ import math
 
 logger = logging.getLogger('reeprotocol')
 
+
+def parse_asdu(trama):
+    p = AsduParser()
+    for x in range(0, len(trama), 2):
+        a = p.append_and_get_if_completed(int(trama[x:x+2], 16))
+    if not a:
+        raise Exception('Trama no completa!')
+    else:
+        return a
+
+
 class ProtocolException(Exception):
     pass
 
@@ -39,7 +50,7 @@ class AppLayer(metaclass=ABCMeta):
     def process_requestresponse(self):
         """ this function makes a very ugly assumption,
         if you don't iterate over all elements, the program will fail"""
-        # TODO CHECK CORRECK ACK
+        # TODO CHECK CORRECT ACK
         while True:
             asdu = FixedAsdu()
             asdu.c.res = 0
@@ -117,8 +128,8 @@ class AppLayer(metaclass=ABCMeta):
         asdu.c.fcv = 1
         asdu.c.cf = 3
         asdu.der = self.link_layer.der
-        asdu.cualificador_ev = 1
-        asdu.causa_tm = 6
+        asdu.cualificador_ev = math.ceil(getattr(user_data, 'data_length', 0x06)/0x06)
+        asdu.causa_tm = getattr(user_data, 'causa_tm', 6)
         asdu.dir_pm = self.link_layer.dir_pm
         # registro> 11 curvas horarias, 12 cuartohorarias, 21 resumenes diarios
         asdu.dir_registro = registro
@@ -127,8 +138,6 @@ class AppLayer(metaclass=ABCMeta):
         return asdu
 
 
-
-    
 class LinkLayer(metaclass=ABCMeta):
 
     def __init__(self, der=None, dir_pm=None):
@@ -145,7 +154,7 @@ class LinkLayer(metaclass=ABCMeta):
         logging.info("->" + ":".join("%02x" % b for b in frame.buffer))
         self.physical_layer.send_bytes(frame.buffer)
 
-    def get_frame(self, timeout = 60):
+    def get_frame(self, timeout=60):
         frame = None
         while not frame:
             bt = self.physical_layer.get_byte(timeout)
