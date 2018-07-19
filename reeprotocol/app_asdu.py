@@ -32,6 +32,12 @@ class AppAsduRegistry(type):
 
 class BaseAppAsdu(metaclass=AppAsduRegistry):
 
+    data_length = 0
+
+    @property
+    def length(self):
+        return self.data_length + 0x09
+
     @property
     def values(self):
         return "\n".join([
@@ -112,16 +118,13 @@ class C_AC_NA_2(BaseAppAsdu):
     used to send the password of the thing
     """
     type = 183
+    data_length = 0x04
 
     def __init__(self, clave=0):
         self.clave = clave
 
     def from_hex(self, data, cualificador_ev):
         self.clave = struct.unpack("I", data)[0]
-
-    @property
-    def length(self):
-        return 0x0d
 
     def to_bytes(self):
         return struct.pack("I", self.clave)
@@ -137,16 +140,13 @@ class C_FS_NA_2(BaseAppAsdu):
     def from_hex(self, data, cualificador_ev):
         pass
 
-    @property
-    def length(self):
-        return 0x09
-
     def to_bytes(self):
         return bytes()
 
 
 class C_CI_NU_2(BaseAppAsdu):
     type = 123
+    data_length = 0x0c
 
     def __init__(self, start_date=datetime.datetime.now(),
                  end_date=datetime.datetime.now()):
@@ -160,10 +160,6 @@ class C_CI_NU_2(BaseAppAsdu):
         self.ultimo_integrado = struct.unpack("B", data[1:2])[0]
         self.tiempo_inicial.from_hex(data[2:7])
         self.tiempo_final.from_hex(data[7:12])
-
-    @property
-    def length(self):
-        return 0x15
 
     def to_bytes(self):
         response = bytearray()
