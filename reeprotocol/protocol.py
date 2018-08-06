@@ -96,7 +96,7 @@ class AppLayer(metaclass=ABCMeta):
         except Exception as e:
             logger.exception("error finishing session {}".format(e))
         
-    def read_integrated_totals(self, start_date, end_date, register = 11):
+    def read_integrated_totals(self, start_date, end_date, register=11):
         asdu = self.create_asdu_request(C_CI_NU_2(start_date, end_date),
                                         register)
         #do not remove this as we have to iterate over physical layer frames.
@@ -108,6 +108,7 @@ class AppLayer(metaclass=ABCMeta):
             pass
     
     def read_datetime(self):
+        #103
         asdu = self.create_asdu_request(C_TI_NA_2())
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():

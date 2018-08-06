@@ -60,6 +60,7 @@ class C_TI_NA_2(BaseAppAsdu):
     Leer fecha y hora actuales
     """
     type = 103
+    causa_tm = 5
     
     def to_bytes(self):
         return bytes()
@@ -91,6 +92,7 @@ class M_TI_TA_2(BaseAppAsdu):
     Fecha y hora actuales
     """
     type = 72
+    causa_tm = 5
 
     def __init__(self):
         self.tiempo = None
@@ -146,7 +148,8 @@ class C_FS_NA_2(BaseAppAsdu):
 
 class C_CI_NU_2(BaseAppAsdu):
     type = 123
-    data_length = 0x0c
+    data_length = 0x06
+    causa_tm = 6
 
     def __init__(self, start_date=datetime.datetime.now(),
                  end_date=datetime.datetime.now()):
@@ -168,6 +171,10 @@ class C_CI_NU_2(BaseAppAsdu):
         response.extend(self.tiempo_inicial.to_bytes())
         response.extend(self.tiempo_final.to_bytes())
         return response
+
+    @property
+    def length(self):
+        return 0x15
 
 
 class M_IT_TK_2(BaseAppAsdu):
