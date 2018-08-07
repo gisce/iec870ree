@@ -9,9 +9,9 @@ __all__ = [
     'C_FS_NA_2',
     'C_TI_NA_2',
     'C_RD_NA_2',
-    'M_IT_TK_2',
-    'M_TI_TA_2',
-    'P_MP_NA_2'
+    'M_IT_TK_2',  # M type are responses no need to be listed
+    'M_TI_TA_2',  # M type are responses no need to be listed
+    'P_MP_NA_2',
 ]
 
 
@@ -183,7 +183,6 @@ class M_IT_TK_2(BaseAppAsdu):
     def __init__(self):
         self.valores = []
         self.tiempo = None
-        pass
 
     def from_hex(self, data, cualificador_ev):
         for i in range(0, cualificador_ev):

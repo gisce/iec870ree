@@ -69,16 +69,16 @@ class AppLayer(metaclass=ABCMeta):
             if asdu_resp.causa_tm  == 0x05:
                 logger.info("Request or asked")
                 break
-            if asdu_resp.causa_tm  == 0x07:
+            elif asdu_resp.causa_tm  == 0x07:
                 logger.info("activation confirmation")
                 break
-            if asdu_resp.causa_tm  == 0x0A:
+            elif asdu_resp.causa_tm  == 0x0A:
                 logger.info("Activation terminated")
                 break
-            if asdu_resp.causa_tm  == 0x0E:
+            elif asdu_resp.causa_tm  == 0x0E:
                 logger.info("requested ASDU-type not available")
                 raise RequestedASDUTypeNotAvailable()
-            if asdu_resp.causa_tm == 0x12:
+            elif asdu_resp.causa_tm == 0x12:
                 logger.info("requested integration period not available")
                 raise IntegrationPeriodNotAvailable()
             else:
