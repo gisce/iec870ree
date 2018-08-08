@@ -12,6 +12,8 @@ __all__ = [
     'M_IT_TK_2',  # M type are responses no need to be listed
     'M_TI_TA_2',  # M type are responses no need to be listed
     'P_MP_NA_2',
+    'C_TA_VC_2',
+    'C_TA_VM_2'
 ]
 
 
@@ -183,6 +185,118 @@ class C_CI_NU_2(BaseAppAsdu):
     @property
     def length(self):
         return 0x15
+
+
+class C_TA_VC_2(BaseAppAsdu):
+    """
+    Leer Información de Tarificación (Valores en Curso)
+    """
+    type = 133
+    causa_tm = 6
+
+    # Register address: 134 or 135 or 136
+
+    def from_hex(self, data, cualificador_ev):
+        pass
+
+    def to_bytes(self):
+        return bytes()
+
+
+class C_TA_VM_2(BaseAppAsdu):
+    """
+    Leer Información de Tarificación (Valores Memorizados)
+    """
+    type = 134
+    data_length = 0x06
+    causa_tm = 6
+
+    # Register address: 134 or 135 or 136
+    def __init__(self, start_date=datetime.datetime.now(),
+                 end_date=datetime.datetime.now()):
+        self.start_date = TimeA(start_date)
+        self.end_date = TimeA(end_date)
+
+    def from_hex(self, data, cualificador_ev):
+        self.start_date.from_hex(data[0:5])
+        self.end_date.from_hex(data[5:10])
+
+    def to_bytes(self):
+        response = bytearray()
+        response.extend(self.start_date.to_bytes())
+        response.extend(self.end_date.to_bytes())
+        return response
+
+    @property
+    def length(self):
+        return 0x13
+
+
+class M_TA_VX_2(BaseAppAsdu):
+    """
+    Class for the M_TA_VC_2(135) and M_TA_VM_2(136) ASDUs
+    """
+    data_length = 0x06
+    causa_tm = 5
+
+    def __init__(self):
+        self.valores = []
+
+    def from_hex(self, data, cualificador_ev):
+        dir = struct.unpack("B", data[0:1])[0]
+        # Active energy
+        abs_active = struct.unpack("I", data[1:5])[0]
+        inc_active = struct.unpack("I", data[5:9])[0]
+        qual_active = struct.unpack("B", data[9:10])[0]
+        # Inductive reactive energy
+        abs_reactive_ind = struct.unpack("I", data[10:14])[0]
+        inc_reactive_ind = struct.unpack("I", data[14:18])[0]
+        qual_reactive_ind = struct.unpack("B", data[18:19])[0]
+        # Absolute reactive energy
+        abs_reactive_cap = struct.unpack("I", data[19:23])[0]
+        inc_reactive_cap = struct.unpack("I", data[23:27])[0]
+        qual_reactive_cap = struct.unpack("B", data[27:28])[0]
+        # Reserved 7
+        res_7 = struct.unpack("I", data[28:32])[0]
+        qual_res_7 = struct.unpack("B", data[32:33])[0]
+        # Reserved 8
+        res_8 = struct.unpack("I", data[33:37])[0]
+        qual_res_8 = struct.unpack("B", data[37:38])[0]
+        # Maximum power
+        max_power = struct.unpack("I", data[38:42])[0]
+        date_max_power = TimeA()
+        date_max_power.from_hex(data[42:47])
+        qual_max_power = struct.unpack("B", data[47:48])[0]
+        # Excessive power
+        exc_power = struct.unpack("I", data[48:52])[0]
+        qual_exc_power = struct.unpack("B", data[52:53])[0]
+        # Period start date
+        date_start = TimeA()
+        date_start.from_hex(data[53:58])
+        # Period end date
+        date_end = TimeA()
+        date_end.from_hex(data[58:63])
+
+        self.valores.append(
+            (dir, abs_active, inc_active, qual_active, abs_reactive_ind,
+             inc_reactive_ind, qual_reactive_ind, abs_reactive_cap,
+             inc_reactive_cap, qual_reactive_cap, res_7, qual_res_7,
+             res_8, qual_res_8, max_power, date_max_power, qual_max_power,
+             exc_power, qual_exc_power, date_start, date_end))
+
+
+class M_TA_VC_2(M_TA_VX_2):
+    """
+    Información de Tarificación (Valores en Curso)
+    """
+    type = 135
+
+
+class M_TA_VM_2(M_TA_VX_2):
+    """
+    Información de Tarificación (Valores Memorizados)
+    """
+    type = 136
 
 
 class M_IT_TK_2(BaseAppAsdu):

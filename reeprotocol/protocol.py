@@ -66,7 +66,9 @@ class AppLayer(metaclass=ABCMeta):
                 raise ProtocolException("Didn't get ASDU")
             yield asdu_resp
 
-            if asdu_resp.causa_tm  == 0x05:
+            if asdu_resp.causa_tm  == 0x05 and asdu_resp.tipo in [135, 136]:
+                logger.info("Request for next period")
+            elif asdu_resp.causa_tm  == 0x05:
                 logger.info("Request or asked")
                 break
             elif asdu_resp.causa_tm  == 0x07:
@@ -120,6 +122,26 @@ class AppLayer(metaclass=ABCMeta):
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
             yield resp
+
+    def current_tariff_info(self, register=134):
+        #133 current values
+        asdu = self.create_asdu_request(C_TA_VC_2(), register)
+        try:
+            resps = list(self.process_request(asdu))
+            for resp in self.process_requestresponse():
+                yield resp
+        except IntegrationPeriodNotAvailable as e:
+            pass
+
+    def stored_tariff_info(self, start_date, end_date, register=134):
+        #134 stored values
+        asdu = self.create_asdu_request(C_TA_VM_2(start_date, end_date), register)
+        try:
+            resps = list(self.process_request(asdu))
+            for resp in self.process_requestresponse():
+                yield resp
+        except IntegrationPeriodNotAvailable as e:
+            pass
 
     def create_asdu_request(self, user_data, registro=0):
         asdu = VariableAsdu()
