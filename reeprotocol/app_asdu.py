@@ -33,6 +33,7 @@ class AppAsduRegistry(type):
 class BaseAppAsdu(metaclass=AppAsduRegistry):
 
     data_length = 0
+    type = 0
 
     @property
     def length(self):
