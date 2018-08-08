@@ -68,24 +68,6 @@ class C_TI_NA_2(BaseAppAsdu):
     def from_hex(self, data, cualificador_ev):
         pass
 
-class P_MP_NA_2(BaseAppAsdu):
-    """
-    Leer el código de fabricante e identificador de equipo
-    """
-    type = 71
-    data_length = 0x06
-
-    def __init__(self):
-        self.codigo_fabricante = None
-        self.codigo_equipo = None
-
-    def to_bytes(self):
-        return bytes()
-
-    def from_hex(self, data, cualificador_ev):
-        self.codigo_fabricante = struct.unpack("B", data[1:2])[0]
-        self.codigo_equipo = struct.unpack("I", data[2:6])[0]
-
 
 class M_TI_TA_2(BaseAppAsdu):
     """
@@ -104,16 +86,36 @@ class M_TI_TA_2(BaseAppAsdu):
 
 class C_RD_NA_2(BaseAppAsdu):
     """
-    Leer el código de fabricante e identificador de equipo
+    Leer identificador de fabricante y equipo
     """
     type = 100
     causa_tm = 5
-    
+
     def to_bytes(self):
         return bytes()
 
     def from_hex(self, data, cualificador_ev):
         pass
+
+
+class P_MP_NA_2(BaseAppAsdu):
+    """
+    Identificador del fabricante y equipo
+    """
+    type = 71
+    data_length = 0x06
+
+    def __init__(self):
+        self.codigo_fabricante = None
+        self.codigo_equipo = None
+
+    def to_bytes(self):
+        return bytes()
+
+    def from_hex(self, data, cualificador_ev):
+        self.codigo_fabricante = struct.unpack("B", data[1:2])[0]
+        self.codigo_equipo = struct.unpack("I", data[2:6])[0]
+
 
 class C_AC_NA_2(BaseAppAsdu):
     """
@@ -147,6 +149,11 @@ class C_FS_NA_2(BaseAppAsdu):
 
 
 class C_CI_NU_2(BaseAppAsdu):
+    """
+    Leer totales integrados operacionales repuestos periódicamente por intervalo
+    de tiempo y rango de direcciones
+    """
+
     type = 123
     data_length = 0x06
     causa_tm = 6
@@ -178,6 +185,11 @@ class C_CI_NU_2(BaseAppAsdu):
 
 
 class M_IT_TK_2(BaseAppAsdu):
+    """
+    Totales integrados operacionales repuestos periódicamente, 4 octetos
+    (incrementos de energía, en kWh o kVARh)
+    """
+
     type = 11
 
     def __init__(self):
@@ -300,4 +312,4 @@ class TimeA():
                    + (":".join("%02x" % b for b in self.to_bytes())) + "\n")
         output += "    datetime: " + str(self.datetime) + "\n"
         output += "  -- TiempoA End \n"
-        return output
+        return str(self.datetime)
