@@ -87,11 +87,13 @@ class AppLayer(metaclass=ABCMeta):
                 raise Exception('causa no detectada')
 
     def authenticate(self, clave_pm):
+        #183
         asdu = self.create_asdu_request(C_AC_NA_2(clave_pm))
         resps = list(self.process_request(asdu))
         return resps[0]
 
     def finish_session(self):
+        #187
         asdu = self.create_asdu_request(C_FS_NA_2())
         try:
             resps = list(self.process_request(asdu))
@@ -99,6 +101,7 @@ class AppLayer(metaclass=ABCMeta):
             logger.exception("error finishing session {}".format(e))
         
     def read_integrated_totals(self, start_date, end_date, register=11):
+        #123
         asdu = self.create_asdu_request(C_CI_NU_2(start_date, end_date),
                                         register)
         #do not remove this as we have to iterate over physical layer frames.

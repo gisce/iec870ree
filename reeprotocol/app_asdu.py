@@ -410,21 +410,22 @@ class TimeA():
                                  self.hour, self.minute)
 
     def __repr__(self):
-        output = "  -- TiempoA Begin -- \n"
-        output += "    minute: " + str(self.minute) + "\n"
-        output += "    TIS: " + str(self.TIS) + "\n"
-        output += "    IV: " + str(self.IV) + "\n"
-        output += "    hour: " + str(self.hour) + "\n"
-        output += "    RES1: " + str(self.RES1) + "\n"
-        output += "    SU: " + str(self.SU) + "\n"
-        output += "    dayofmonth: " + str(self.dayofmonth) + "\n"
-        output += "    dayofweek: " + str(self.dayofweek) + "\n"
-        output += "    month: " + str(self.month) + "\n"
-        output += "    ETI: " + str(self.ETI) + "\n"
-        output += "    PTI: " + str(self.PTI) + "\n"
-        output += "    year: " + str(self.year) + "\n"
-        output += ("    content: "
-                   + (":".join("%02x" % b for b in self.to_bytes())) + "\n")
-        output += "    datetime: " + str(self.datetime) + "\n"
-        output += "  -- TiempoA End \n"
+        # output = "  -- TiempoA Begin -- \n"
+        # output += "    minute: " + str(self.minute) + "\n"
+        # output += "    TIS: " + str(self.TIS) + "\n"
+        # output += "    IV: " + str(self.IV) + "\n"
+        # output += "    hour: " + str(self.hour) + "\n"
+        # output += "    RES1: " + str(self.RES1) + "\n"
+        # output += "    SU: " + str(self.SU) + "\n"
+        # output += "    dayofmonth: " + str(self.dayofmonth) + "\n"
+        # output += "    dayofweek: " + str(self.dayofweek) + "\n"
+        # output += "    month: " + str(self.month) + "\n"
+        # output += "    ETI: " + str(self.ETI) + "\n"
+        # output += "    PTI: " + str(self.PTI) + "\n"
+        # output += "    year: " + str(self.year) + "\n"
+        # output += ("    content: "
+        #            + (":".join("%02x" % b for b in self.to_bytes())) + "\n")
+        # output += "    datetime: " + str(self.datetime) + "\n"
+        # output += "  -- TiempoA End \n"
+        # return output
         return str(self.datetime)
