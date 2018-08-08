@@ -4,13 +4,21 @@ from .base_asdu import (
     AsduParser, FixedAsdu, VariableAsdu
 )
 import traceback
-from .app_asdu import (
-    C_AC_NA_2,
-    C_CI_NU_2,
-    C_FS_NA_2,
-)
+from .app_asdu import *
+import math
 
 logger = logging.getLogger('reeprotocol')
+
+
+def parse_asdu(trama):
+    p = AsduParser()
+    for x in range(0, len(trama), 2):
+        a = p.append_and_get_if_completed(int(trama[x:x+2], 16))
+    if not a:
+        raise Exception('Trama no completa!')
+    else:
+        return a
+
 
 class ProtocolException(Exception):
     pass
@@ -42,7 +50,7 @@ class AppLayer(metaclass=ABCMeta):
     def process_requestresponse(self):
         """ this function makes a very ugly assumption,
         if you don't iterate over all elements, the program will fail"""
-        # TODO CHECK CORRECK ACK
+        # TODO CHECK CORRECT ACK
         while True:
             asdu = FixedAsdu()
             asdu.c.res = 0
@@ -58,18 +66,23 @@ class AppLayer(metaclass=ABCMeta):
                 raise ProtocolException("Didn't get ASDU")
             yield asdu_resp
 
-            if asdu_resp.causa_tm  == 0x07:
+            if asdu_resp.causa_tm  == 0x05:
+                logger.info("Request or asked")
+                break
+            elif asdu_resp.causa_tm  == 0x07:
                 logger.info("activation confirmation")
                 break
-            if asdu_resp.causa_tm  == 0x0A:
+            elif asdu_resp.causa_tm  == 0x0A:
                 logger.info("Activation terminated")
                 break
-            if asdu_resp.causa_tm  == 0x0E:
+            elif asdu_resp.causa_tm  == 0x0E:
                 logger.info("requested ASDU-type not available")
                 raise RequestedASDUTypeNotAvailable()
-            if asdu_resp.causa_tm == 0x12:
+            elif asdu_resp.causa_tm == 0x12:
                 logger.info("requested integration period not available")
                 raise IntegrationPeriodNotAvailable()
+            else:
+                raise Exception('causa no detectada')
 
     def authenticate(self, clave_pm):
         asdu = self.create_asdu_request(C_AC_NA_2(clave_pm))
@@ -83,7 +96,7 @@ class AppLayer(metaclass=ABCMeta):
         except Exception as e:
             logger.exception("error finishing session {}".format(e))
         
-    def read_integrated_totals(self, start_date, end_date, register = 11):
+    def read_integrated_totals(self, start_date, end_date, register=11):
         asdu = self.create_asdu_request(C_CI_NU_2(start_date, end_date),
                                         register)
         #do not remove this as we have to iterate over physical layer frames.
@@ -93,7 +106,21 @@ class AppLayer(metaclass=ABCMeta):
                 yield resp
         except IntegrationPeriodNotAvailable as e:
             pass
-            
+    
+    def read_datetime(self):
+        #103
+        asdu = self.create_asdu_request(C_TI_NA_2())
+        resps = list(self.process_request(asdu))
+        for resp in self.process_requestresponse():
+            yield resp
+
+    def get_info(self):
+        #100
+        asdu = self.create_asdu_request(C_RD_NA_2())
+        resps = list(self.process_request(asdu))
+        for resp in self.process_requestresponse():
+            yield resp
+
     def create_asdu_request(self, user_data, registro=0):
         asdu = VariableAsdu()
         asdu.c.res = 0
@@ -102,8 +129,8 @@ class AppLayer(metaclass=ABCMeta):
         asdu.c.fcv = 1
         asdu.c.cf = 3
         asdu.der = self.link_layer.der
-        asdu.cualificador_ev = 1
-        asdu.causa_tm = 6
+        asdu.cualificador_ev = math.ceil(getattr(user_data, 'data_length', 0x06)/0x06)
+        asdu.causa_tm = getattr(user_data, 'causa_tm', 6)
         asdu.dir_pm = self.link_layer.dir_pm
         # registro> 11 curvas horarias, 12 cuartohorarias, 21 resumenes diarios
         asdu.dir_registro = registro
@@ -112,8 +139,6 @@ class AppLayer(metaclass=ABCMeta):
         return asdu
 
 
-
-    
 class LinkLayer(metaclass=ABCMeta):
 
     def __init__(self, der=None, dir_pm=None):
@@ -126,11 +151,11 @@ class LinkLayer(metaclass=ABCMeta):
         self.asdu_parser = AsduParser()
 
     def send_frame(self, frame):
-        logger.info("sending frame {}".format(frame))
+        logger.info("sending frame\n {}".format(frame))
         logging.info("->" + ":".join("%02x" % b for b in frame.buffer))
         self.physical_layer.send_bytes(frame.buffer)
 
-    def get_frame(self, timeout = 60):
+    def get_frame(self, timeout=60):
         frame = None
         while not frame:
             bt = self.physical_layer.get_byte(timeout)

@@ -3,6 +3,18 @@ import struct
 import datetime
 
 
+__all__ = [
+    'C_AC_NA_2',
+    'C_CI_NU_2',
+    'C_FS_NA_2',
+    'C_TI_NA_2',
+    'C_RD_NA_2',
+    'M_IT_TK_2',  # M type are responses no need to be listed
+    'M_TI_TA_2',  # M type are responses no need to be listed
+    'P_MP_NA_2',
+]
+
+
 class AppAsduRegistry(type):
     types = dict()
 
@@ -19,7 +31,90 @@ class AppAsduRegistry(type):
 
 
 class BaseAppAsdu(metaclass=AppAsduRegistry):
-    pass
+
+    data_length = 0
+
+    @property
+    def length(self):
+        return self.data_length + 0x09
+
+    @property
+    def values(self):
+        return "\n".join([
+            "    {}: {}".format(k, v) for k,v in vars(self).items()
+        ])
+    
+    def __repr__(self):
+        return '\n'.join([
+            " -- {class_name} Begin --",
+            "{values}",
+            " -- {class_name} End --"
+        ]).format(
+            class_name=self.__class__.__name__,
+            values=self.values
+        )
+
+
+class C_TI_NA_2(BaseAppAsdu):
+    """
+    Leer fecha y hora actuales
+    """
+    type = 103
+    causa_tm = 5
+    
+    def to_bytes(self):
+        return bytes()
+
+    def from_hex(self, data, cualificador_ev):
+        pass
+
+
+class M_TI_TA_2(BaseAppAsdu):
+    """
+    Fecha y hora actuales
+    """
+    type = 72
+    causa_tm = 5
+
+    def __init__(self):
+        self.tiempo = None
+
+    def from_hex(self, data, cualificador_ev):
+        self.tiempo = TimeA()
+        self.tiempo.from_hex(data)
+
+
+class C_RD_NA_2(BaseAppAsdu):
+    """
+    Leer identificador de fabricante y equipo
+    """
+    type = 100
+    causa_tm = 5
+
+    def to_bytes(self):
+        return bytes()
+
+    def from_hex(self, data, cualificador_ev):
+        pass
+
+
+class P_MP_NA_2(BaseAppAsdu):
+    """
+    Identificador del fabricante y equipo
+    """
+    type = 71
+    data_length = 0x06
+
+    def __init__(self):
+        self.codigo_fabricante = None
+        self.codigo_equipo = None
+
+    def to_bytes(self):
+        return bytes()
+
+    def from_hex(self, data, cualificador_ev):
+        self.codigo_fabricante = struct.unpack("B", data[1:2])[0]
+        self.codigo_equipo = struct.unpack("I", data[2:6])[0]
 
 
 class C_AC_NA_2(BaseAppAsdu):
@@ -27,6 +122,7 @@ class C_AC_NA_2(BaseAppAsdu):
     used to send the password of the thing
     """
     type = 183
+    data_length = 0x04
 
     def __init__(self, clave=0):
         self.clave = clave
@@ -34,41 +130,33 @@ class C_AC_NA_2(BaseAppAsdu):
     def from_hex(self, data, cualificador_ev):
         self.clave = struct.unpack("I", data)[0]
 
-    @property
-    def length(self):
-        return 0x0d
-
     def to_bytes(self):
         return struct.pack("I", self.clave)
 
-    def __repr__(self):
-        output = " -- C_AC_NA_2 Begin -- \n"
-        output += "  clave: " + str(self.clave) + "\n"
-        output += " -- C_AC_NA_2 End \n"
-        return output
-
 
 class C_FS_NA_2(BaseAppAsdu):
+    """
+    Finalizar sesión
+    """
+
     type = 187
 
     def from_hex(self, data, cualificador_ev):
         pass
 
-    @property
-    def length(self):
-        return 0x09
-
     def to_bytes(self):
         return bytes()
 
-    def __repr__(self):
-        output = " -- C_FS_NA_2 Begin -- \n"
-        output += " -- C_FS_NA_2 End \n"
-        return output
-
 
 class C_CI_NU_2(BaseAppAsdu):
+    """
+    Leer totales integrados operacionales repuestos periódicamente por intervalo
+    de tiempo y rango de direcciones
+    """
+
     type = 123
+    data_length = 0x06
+    causa_tm = 6
 
     def __init__(self, start_date=datetime.datetime.now(),
                  end_date=datetime.datetime.now()):
@@ -83,10 +171,6 @@ class C_CI_NU_2(BaseAppAsdu):
         self.tiempo_inicial.from_hex(data[2:7])
         self.tiempo_final.from_hex(data[7:12])
 
-    @property
-    def length(self):
-        return 0x15
-
     def to_bytes(self):
         response = bytearray()
         response.extend(struct.pack("B", self.primer_integrado))
@@ -95,23 +179,22 @@ class C_CI_NU_2(BaseAppAsdu):
         response.extend(self.tiempo_final.to_bytes())
         return response
 
-    def __repr__(self):
-        output = " -- C_CI_NU_2 Begin -- \n"
-        output += "  primer_integrado: " + str(self.primer_integrado) + "\n"
-        output += "  ultimo_integrado: " + str(self.ultimo_integrado) + "\n"
-        output += "  tiempo_inicial: " + str(self.tiempo_inicial) + "\n"
-        output += "  tiempo_final: " + str(self.tiempo_final) + "\n"
-        output += " -- C_CI_NU_2 End \n"
-        return output
+    @property
+    def length(self):
+        return 0x15
 
 
 class M_IT_TK_2(BaseAppAsdu):
+    """
+    Totales integrados operacionales repuestos periódicamente, 4 octetos
+    (incrementos de energía, en kWh o kVARh)
+    """
+
     type = 11
 
     def __init__(self):
         self.valores = []
         self.tiempo = None
-        pass
 
     def from_hex(self, data, cualificador_ev):
         for i in range(0, cualificador_ev):
@@ -128,14 +211,6 @@ class M_IT_TK_2(BaseAppAsdu):
         # ok, ahora el tiempo
         self.tiempo = TimeA()
         self.tiempo.from_hex(data[position:position+5])
-
-    def __repr__(self):
-        output = " -- M_IT_TK_2 Begin -- \n"
-        output += ("   contadores (direccion objeto, total integrado"
-                   ", cualificador) " + str(self.valores) + "\n")
-        output += "   tiempo: " + str(self.tiempo) + "\n"
-        output += " -- M_IT_TK_2 End \n"
-        return output
 
 
 class TimeA():
@@ -237,4 +312,4 @@ class TimeA():
                    + (":".join("%02x" % b for b in self.to_bytes())) + "\n")
         output += "    datetime: " + str(self.datetime) + "\n"
         output += "  -- TiempoA End \n"
-        return output
+        return str(self.datetime)

@@ -229,7 +229,7 @@ class VariableAsdu:
         output += " direccion punto medida: " + str(self.dir_pm) + "\n"
         output += " direccion registro: " + str(self.dir_registro) + "\n"
         output += " CONTENIDO: " + (":".join("%02x" % b for b in self.data)) + "\n"
-        output += str(self.content) 
+        output += str(self.content) + "\n"
         output += " checksum: " + str(self.checksum) + " " +hex(self.checksum) +  "\n"
         output += " " + (":".join("%02x" % b for b in self.buffer)) + "\n"
         output += "----- VariableAsdu End -----"

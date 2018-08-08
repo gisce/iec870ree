@@ -10,25 +10,37 @@ import reeprotocol.ip
 import reeprotocol.protocol
 import datetime
 
-def run_example(ip, port, der, dir_pm, clave_pm):
-    physical_layer = reeprotocol.ip.Ip((ip, port))
-    link_layer = reeprotocol.protocol.LinkLayer(der, dir_pm)
-    link_layer.initialize(physical_layer)
-    app_layer = reeprotocol.protocol.AppLayer()
-    app_layer.initialize(link_layer)
 
-    physical_layer.connect()
-    link_layer.link_state_request()
-    link_layer.remote_link_reposition()
-    logging.info("before authentication")
-    resp = app_layer.authenticate(clave_pm)
-    logging.info("CLIENTE authenticate response {}".format(resp))
-    logging.info("before read")
-    for resp in app_layer\
-        .read_integrated_totals(datetime.datetime(2017, 10, 1, 1, 0),
-                                datetime.datetime(2017, 11, 1, 0, 0)):
-        logging.info("read response {}".format(resp))
-    physical_layer.disconnect()
+def run_example(ip, port, der, dir_pm, clave_pm):
+    try:
+        physical_layer = reeprotocol.ip.Ip((ip, port))
+        link_layer = reeprotocol.protocol.LinkLayer(der, dir_pm)
+        link_layer.initialize(physical_layer)
+        app_layer = reeprotocol.protocol.AppLayer()
+        app_layer.initialize(link_layer)
+
+        physical_layer.connect()
+        link_layer.link_state_request()
+        link_layer.remote_link_reposition()
+        logging.info("before authentication")
+        resp = app_layer.authenticate(clave_pm)
+        logging.info("CLIENTE authenticate response {}".format(resp))
+        logging.info("before read")
+        """
+        for resp in app_layer\
+            .read_integrated_totals(datetime.datetime(2017, 10, 1, 1, 0),
+                                    datetime.datetime(2017, 11, 1, 0, 0)):
+            logging.info("read response {}".format(resp))
+        """
+        for resp in app_layer.get_info():
+            logging.info("read response {}".format(resp))
+    except Exception:
+        raise
+    finally:
+        #app_layer.finish_session()
+        physical_layer.disconnect()
+        sys.exit(1)
+
     
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
