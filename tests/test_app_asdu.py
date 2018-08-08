@@ -41,3 +41,38 @@ class TestAppAsdu(unittest.TestCase):
         tiempo2 = app_asdu.TimeA()
         tiempo2.from_hex(thebytes)
         self.assertEqual(tiempo2.datetime, d)
+
+    def test_M_TI_TA_2_from_hex(self):
+        c = app_asdu.M_TI_TA_2()
+        c.from_hex(bytes.fromhex("00 64 2a 44 12 08 12"), 1)
+        self.assertEqual(c.tiempo.datetime, datetime.datetime(2018, 4, 10, 4))
+
+    def test_P_MP_NA_2_from_hex(self):
+        c = app_asdu.P_MP_NA_2()
+        c.from_hex(bytes.fromhex("04 fb a2 97 42 24"), 1)
+        self.assertEqual(c.codigo_fabricante, 251)
+        self.assertEqual(c.codigo_equipo, 608343970)
+
+    def test_C_CI_NU_2(self):
+        c = app_asdu.C_CI_NU_2(datetime.datetime(2018, 7, 1, 1),
+                               datetime.datetime(2018, 8, 1, 0))
+        self.assertEqual(c.to_bytes(), bytearray(bytes.fromhex("01 08 00 01 e1 07 12 00 00 61 08 12")))
+        self.assertEqual(c.length, 21)
+
+    def test_C_CI_NU_2_from_hex(self):
+        c = app_asdu.C_CI_NU_2()
+        c.from_hex(bytes.fromhex("01 08 00 01 e1 07 12 00 00 61 08 12"), 1)
+        self.assertEqual(c.primer_integrado, 1)
+        self.assertEqual(c.ultimo_integrado, 8)
+        self.assertEqual(c.tiempo_inicial.datetime, datetime.datetime(2018, 7, 1, 1))
+        self.assertEqual(c.tiempo_final.datetime, datetime.datetime(2018, 8, 1, 0))
+
+    def test_M_IT_TK_2_from_hex(self):
+        c = app_asdu.M_IT_TK_2()
+        self.assertEqual(c.valores, [])
+        self.assertEqual(c.tiempo, None)
+        c.from_hex(bytes.fromhex("01 04 00 00 00 00 02 00 00 00 00 00 03 1b 00 00 00 00 04 00 00 00 00 00 05 00 00 00 00 00 06 00 00 00 00 00 07 00 00 00 00 80 08 00 00 00 00 80 00 81 e1 07 12"), 8)
+
+        self.assertEqual(c.valores, [(1, 4, 0), (2, 0, 0), (3, 27, 0), (4, 0, 0)
+            , (5, 0, 0), (6, 0, 0), (7, 0, 128), (8, 0, 128)])
+        self.assertEqual(c.tiempo.datetime, datetime.datetime(2018, 7, 1, 1))
