@@ -66,7 +66,7 @@ class AppLayer(metaclass=ABCMeta):
                 raise ProtocolException("Didn't get ASDU")
             yield asdu_resp
 
-            if asdu_resp.causa_tm  == 0x05 and asdu_resp.tipo in [135, 136]:
+            if asdu_resp.causa_tm  == 0x05 and asdu_resp.tipo in [135, 136, 11]:
                 logger.info("Request for next period")
             elif asdu_resp.causa_tm  == 0x05:
                 logger.info("Request or asked")

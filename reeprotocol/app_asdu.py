@@ -314,6 +314,8 @@ class M_IT_TK_2(BaseAppAsdu):
     """
 
     type = 11
+    IntegratedTotals = namedtuple('IntegratedTotals', ['address', 'total',
+                                                       'quality'])
 
     def __init__(self):
         self.valores = []
@@ -324,12 +326,11 @@ class M_IT_TK_2(BaseAppAsdu):
             position = i * 6  # 1 byte de typo 4 de medida 1 de cualificador
             # total integrado (4 octetos de energía+1 octeto con cualificadores
             # y número de secuencia), para cada uno de los totales.
-            direccion_objeto = struct.unpack("B", data[position:position+1])[0]
-            total_integrado = struct.unpack("I",
+            address = struct.unpack("B", data[position:position+1])[0]
+            total = struct.unpack("I",
                                             data[position + 1:position + 5])[0]
-            cualificador = struct.unpack("B", data[position+5:position+6])[0]
-            self.valores.append((direccion_objeto,
-                                 total_integrado, cualificador))
+            quality = struct.unpack("B", data[position+5:position+6])[0]
+            self.valores.append(self.IntegratedTotals(address, total, quality))
         position = position + 6
         # ok, ahora el tiempo
         self.tiempo = TimeA()
