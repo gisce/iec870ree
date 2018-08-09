@@ -315,13 +315,16 @@ class M_IT_TK_2(BaseAppAsdu):
 
     type = 11
     IntegratedTotals = namedtuple('IntegratedTotals', ['address', 'total',
-                                                       'quality'])
+                                                       'quality', 'datetime'])
 
     def __init__(self):
         self.valores = []
         self.tiempo = None
 
     def from_hex(self, data, cualificador_ev):
+        time_pos = cualificador_ev * 6
+        self.tiempo = TimeA()
+        self.tiempo.from_hex(data[time_pos:time_pos + 5])
         for i in range(0, cualificador_ev):
             position = i * 6  # 1 byte de typo 4 de medida 1 de cualificador
             # total integrado (4 octetos de energía+1 octeto con cualificadores
@@ -330,11 +333,8 @@ class M_IT_TK_2(BaseAppAsdu):
             total = struct.unpack("I",
                                             data[position + 1:position + 5])[0]
             quality = struct.unpack("B", data[position+5:position+6])[0]
-            self.valores.append(self.IntegratedTotals(address, total, quality))
-        position = position + 6
-        # ok, ahora el tiempo
-        self.tiempo = TimeA()
-        self.tiempo.from_hex(data[position:position+5])
+            self.valores.append(self.IntegratedTotals(address, total, quality,
+                                                      self.tiempo))
 
 
 class TimeA():
