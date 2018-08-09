@@ -1,6 +1,7 @@
 import bitstring
 import struct
 import datetime
+from collections import namedtuple
 
 
 __all__ = [
@@ -238,38 +239,44 @@ class M_TA_VX_2(BaseAppAsdu):
     """
     data_length = 0x06
     causa_tm = 5
+    BillingRegister = namedtuple('BillingRegister', ['address', 'active_abs',
+    'active_inc', 'active_qual', 'reactive_abs_ind', 'reactive_inc_ind',
+    'reactive_qua_ind', 'reactive_abs_cap', 'reactive_inc_cap',
+    'reactive_qual_cap', 'reserved_7', 'reserved_7_qual', 'reserved_8',
+    'reserved_8_qual', 'max_power', 'max_power_date', 'max_power_qual',
+    'excess_power', 'ecxess_power_qual', 'date_start', 'date_end'])
 
     def __init__(self):
         self.valores = []
 
     def from_hex(self, data, cualificador_ev):
-        dir = struct.unpack("B", data[0:1])[0]
+        address = struct.unpack("B", data[0:1])[0]
         # Active energy
-        abs_active = struct.unpack("I", data[1:5])[0]
-        inc_active = struct.unpack("I", data[5:9])[0]
-        qual_active = struct.unpack("B", data[9:10])[0]
+        active_abs = struct.unpack("I", data[1:5])[0]
+        active_inc = struct.unpack("I", data[5:9])[0]
+        active_qual = struct.unpack("B", data[9:10])[0]
         # Inductive reactive energy
-        abs_reactive_ind = struct.unpack("I", data[10:14])[0]
-        inc_reactive_ind = struct.unpack("I", data[14:18])[0]
-        qual_reactive_ind = struct.unpack("B", data[18:19])[0]
+        reactive_abs_ind = struct.unpack("I", data[10:14])[0]
+        reactive_inc_ind = struct.unpack("I", data[14:18])[0]
+        reactive_qua_ind = struct.unpack("B", data[18:19])[0]
         # Absolute reactive energy
-        abs_reactive_cap = struct.unpack("I", data[19:23])[0]
-        inc_reactive_cap = struct.unpack("I", data[23:27])[0]
-        qual_reactive_cap = struct.unpack("B", data[27:28])[0]
+        reactive_abs_cap = struct.unpack("I", data[19:23])[0]
+        reactive_inc_cap = struct.unpack("I", data[23:27])[0]
+        reactive_qual_cap = struct.unpack("B", data[27:28])[0]
         # Reserved 7
-        res_7 = struct.unpack("I", data[28:32])[0]
-        qual_res_7 = struct.unpack("B", data[32:33])[0]
+        reserved_7 = struct.unpack("I", data[28:32])[0]
+        reserved_7_qual = struct.unpack("B", data[32:33])[0]
         # Reserved 8
-        res_8 = struct.unpack("I", data[33:37])[0]
-        qual_res_8 = struct.unpack("B", data[37:38])[0]
+        reserved_8 = struct.unpack("I", data[33:37])[0]
+        reserved_8_qual = struct.unpack("B", data[37:38])[0]
         # Maximum power
         max_power = struct.unpack("I", data[38:42])[0]
-        date_max_power = TimeA()
-        date_max_power.from_hex(data[42:47])
-        qual_max_power = struct.unpack("B", data[47:48])[0]
+        max_power_date = TimeA()
+        max_power_date.from_hex(data[42:47])
+        max_power_qual = struct.unpack("B", data[47:48])[0]
         # Excessive power
-        exc_power = struct.unpack("I", data[48:52])[0]
-        qual_exc_power = struct.unpack("B", data[52:53])[0]
+        excess_power = struct.unpack("I", data[48:52])[0]
+        ecxess_power_qual = struct.unpack("B", data[52:53])[0]
         # Period start date
         date_start = TimeA()
         date_start.from_hex(data[53:58])
@@ -277,12 +284,13 @@ class M_TA_VX_2(BaseAppAsdu):
         date_end = TimeA()
         date_end.from_hex(data[58:63])
 
-        self.valores.append(
-            (dir, abs_active, inc_active, qual_active, abs_reactive_ind,
-             inc_reactive_ind, qual_reactive_ind, abs_reactive_cap,
-             inc_reactive_cap, qual_reactive_cap, res_7, qual_res_7,
-             res_8, qual_res_8, max_power, date_max_power, qual_max_power,
-             exc_power, qual_exc_power, date_start, date_end))
+        br = self.BillingRegister(address, active_abs, active_inc, active_qual,
+        reactive_abs_ind, reactive_inc_ind, reactive_qua_ind, reactive_abs_cap,
+        reactive_inc_cap, reactive_qual_cap, reserved_7, reserved_7_qual,
+        reserved_8, reserved_8_qual, max_power, max_power_date, max_power_qual,
+        excess_power, ecxess_power_qual, date_start, date_end)
+
+        self.valores.append(br)
 
 
 class M_TA_VC_2(M_TA_VX_2):
