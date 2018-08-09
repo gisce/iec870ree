@@ -108,7 +108,8 @@ class AppLayer(metaclass=ABCMeta):
         try:
             resps = list(self.process_request(asdu))
             for resp in self.process_requestresponse():
-                yield resp
+                if resp.tipo == 8:
+                    yield resp
         except IntegrationPeriodNotAvailable as e:
             pass
 
@@ -120,7 +121,8 @@ class AppLayer(metaclass=ABCMeta):
         try:
             resps = list(self.process_request(asdu))
             for resp in self.process_requestresponse():
-                yield resp
+                if resp.tipo == 11:
+                    yield resp
         except IntegrationPeriodNotAvailable as e:
             pass
     
@@ -129,14 +131,16 @@ class AppLayer(metaclass=ABCMeta):
         asdu = self.create_asdu_request(C_TI_NA_2())
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            yield resp
+            if resp.tipo == 72:
+                yield resp
 
     def get_info(self):
         #100
         asdu = self.create_asdu_request(C_RD_NA_2())
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            yield resp
+            if resp.tipo == 71:
+                yield resp
 
     def current_tariff_info(self, register=134):
         #133 current values
@@ -144,7 +148,8 @@ class AppLayer(metaclass=ABCMeta):
         try:
             resps = list(self.process_request(asdu))
             for resp in self.process_requestresponse():
-                yield resp
+                if resp.tipo == 135:
+                    yield resp
         except IntegrationPeriodNotAvailable as e:
             pass
 
@@ -154,7 +159,8 @@ class AppLayer(metaclass=ABCMeta):
         try:
             resps = list(self.process_request(asdu))
             for resp in self.process_requestresponse():
-                yield resp
+                if resp.tipo == 136:
+                    yield resp
         except IntegrationPeriodNotAvailable as e:
             pass
 
