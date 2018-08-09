@@ -66,7 +66,7 @@ class AppLayer(metaclass=ABCMeta):
                 raise ProtocolException("Didn't get ASDU")
             yield asdu_resp
 
-            if asdu_resp.causa_tm  == 0x05 and asdu_resp.tipo in [135, 136, 11]:
+            if asdu_resp.causa_tm  == 0x05 and asdu_resp.tipo in [135, 136, 11, 8]:
                 logger.info("Request for next period")
             elif asdu_resp.causa_tm  == 0x05:
                 logger.info("Request or asked")
@@ -99,8 +99,20 @@ class AppLayer(metaclass=ABCMeta):
             resps = list(self.process_request(asdu))
         except Exception as e:
             logger.exception("error finishing session {}".format(e))
-        
-    def read_integrated_totals(self, start_date, end_date, register=11):
+
+    def read_daily_billings(self, start_date, end_date, register=21):
+        #122
+        asdu = self.create_asdu_request(C_CI_NT_2(start_date, end_date),
+                                        register)
+        #do not remove this as we have to iterate over physical layer frames.
+        try:
+            resps = list(self.process_request(asdu))
+            for resp in self.process_requestresponse():
+                yield resp
+        except IntegrationPeriodNotAvailable as e:
+            pass
+
+    def read_hourly_profiles(self, start_date, end_date, register=11):
         #123
         asdu = self.create_asdu_request(C_CI_NU_2(start_date, end_date),
                                         register)

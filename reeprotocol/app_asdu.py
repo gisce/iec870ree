@@ -7,6 +7,7 @@ from collections import namedtuple
 __all__ = [
     'C_AC_NA_2',
     'C_CI_NU_2',
+    'C_CI_NT_2',
     'C_FS_NA_2',
     'C_TI_NA_2',
     'C_RD_NA_2',
@@ -151,14 +152,13 @@ class C_FS_NA_2(BaseAppAsdu):
     def to_bytes(self):
         return bytes()
 
-
-class C_CI_NU_2(BaseAppAsdu):
+class C_CI_NX_2(BaseAppAsdu):
     """
+    Class for the C_CI_NT_2(122) and C_CI_NU_2(123) ASDUs
+
     Leer totales integrados operacionales repuestos periódicamente por intervalo
     de tiempo y rango de direcciones
     """
-
-    type = 123
     data_length = 0x06
     causa_tm = 6
 
@@ -186,6 +186,20 @@ class C_CI_NU_2(BaseAppAsdu):
     @property
     def length(self):
         return 0x15
+
+
+class C_CI_NT_2(C_CI_NX_2):
+    """
+    Class to read absolute measures
+    """
+    type = 122
+
+
+class C_CI_NU_2(C_CI_NX_2):
+    """
+    Class to read incremental measures
+    """
+    type = 123
 
 
 class C_TA_VC_2(BaseAppAsdu):
@@ -307,13 +321,10 @@ class M_TA_VM_2(M_TA_VX_2):
     type = 136
 
 
-class M_IT_TK_2(BaseAppAsdu):
+class M_IT_TX_2(BaseAppAsdu):
     """
-    Totales integrados operacionales repuestos periódicamente, 4 octetos
-    (incrementos de energía, en kWh o kVARh)
+    Class for the M_IT_TG_2(8) and M_IT_TK_2(11) ASDUs
     """
-
-    type = 11
     IntegratedTotals = namedtuple('IntegratedTotals', ['address', 'total',
                                                        'quality', 'datetime'])
 
@@ -329,12 +340,30 @@ class M_IT_TK_2(BaseAppAsdu):
             position = i * 6  # 1 byte de typo 4 de medida 1 de cualificador
             # total integrado (4 octetos de energía+1 octeto con cualificadores
             # y número de secuencia), para cada uno de los totales.
-            address = struct.unpack("B", data[position:position+1])[0]
+            address = struct.unpack("B", data[position:position + 1])[0]
             total = struct.unpack("I",
-                                            data[position + 1:position + 5])[0]
-            quality = struct.unpack("B", data[position+5:position+6])[0]
+                                  data[position + 1:position + 5])[0]
+            quality = struct.unpack("B", data[position + 5:position + 6])[0]
             self.valores.append(self.IntegratedTotals(address, total, quality,
                                                       self.tiempo))
+
+
+class M_IT_TK_2(M_IT_TX_2):
+    """
+    Totales integrados operacionales repuestos periódicamente, 4 octetos
+    (incrementos de energía, en kWh o kVARh)
+    """
+
+    type = 11
+
+
+class M_IT_TG_2(M_IT_TX_2):
+    """
+    Totales integrados operacionales, 4 octetos (lecturas de contadores
+    absolutos, en kWh o kVARh)
+    """
+
+    type = 8
 
 
 class TimeA():
