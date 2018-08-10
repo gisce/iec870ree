@@ -162,6 +162,7 @@ class C_FS_NA_2(BaseAppAsdu):
     def to_bytes(self):
         return bytes()
 
+
 class C_CI_NX_2(BaseAppAsdu):
     """
     Class for the C_CI_NT_2(122) and C_CI_NU_2(123) ASDUs
@@ -305,8 +306,9 @@ class M_TA_VX_2(BaseAppAsdu):
         br = BillingRegister(address, active_abs, active_inc, active_qual,
         reactive_abs_ind, reactive_inc_ind, reactive_qua_ind, reactive_abs_cap,
         reactive_inc_cap, reactive_qual_cap, reserved_7, reserved_7_qual,
-        reserved_8, reserved_8_qual, max_power, max_power_date, max_power_qual,
-        excess_power, ecxess_power_qual, date_start, date_end)
+        reserved_8, reserved_8_qual, max_power, max_power_date.datetime,
+        max_power_qual, excess_power, ecxess_power_qual, date_start.datetime,
+        date_end.datetime)
 
         self.valores.append(br)
 
@@ -347,7 +349,7 @@ class M_IT_TX_2(BaseAppAsdu):
                                   data[position + 1:position + 5])[0]
             quality = struct.unpack("B", data[position + 5:position + 6])[0]
             self.valores.append(IntegratedTotals(address, total, quality,
-                                                 self.tiempo))
+                                                 self.tiempo.datetime))
 
 
 class M_IT_TK_2(M_IT_TX_2):
