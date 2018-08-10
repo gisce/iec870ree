@@ -18,6 +18,16 @@ __all__ = [
     'C_TA_VM_2'
 ]
 
+BillingRegister = namedtuple('BillingRegister', ['address', 'active_abs',
+    'active_inc', 'active_qual', 'reactive_abs_ind', 'reactive_inc_ind',
+    'reactive_qua_ind', 'reactive_abs_cap', 'reactive_inc_cap',
+    'reactive_qual_cap', 'reserved_7', 'reserved_7_qual', 'reserved_8',
+    'reserved_8_qual', 'max_power', 'max_power_date', 'max_power_qual',
+    'excess_power', 'ecxess_power_qual', 'date_start', 'date_end'])
+
+IntegratedTotals = namedtuple('IntegratedTotals', ['address', 'total', 'quality'
+                              , 'datetime'])
+
 
 class AppAsduRegistry(type):
     types = dict()
@@ -253,12 +263,6 @@ class M_TA_VX_2(BaseAppAsdu):
     """
     data_length = 0x06
     causa_tm = 5
-    BillingRegister = namedtuple('BillingRegister', ['address', 'active_abs',
-    'active_inc', 'active_qual', 'reactive_abs_ind', 'reactive_inc_ind',
-    'reactive_qua_ind', 'reactive_abs_cap', 'reactive_inc_cap',
-    'reactive_qual_cap', 'reserved_7', 'reserved_7_qual', 'reserved_8',
-    'reserved_8_qual', 'max_power', 'max_power_date', 'max_power_qual',
-    'excess_power', 'ecxess_power_qual', 'date_start', 'date_end'])
 
     def __init__(self):
         self.valores = []
@@ -298,7 +302,7 @@ class M_TA_VX_2(BaseAppAsdu):
         date_end = TimeA()
         date_end.from_hex(data[58:63])
 
-        br = self.BillingRegister(address, active_abs, active_inc, active_qual,
+        br = BillingRegister(address, active_abs, active_inc, active_qual,
         reactive_abs_ind, reactive_inc_ind, reactive_qua_ind, reactive_abs_cap,
         reactive_inc_cap, reactive_qual_cap, reserved_7, reserved_7_qual,
         reserved_8, reserved_8_qual, max_power, max_power_date, max_power_qual,
@@ -325,8 +329,6 @@ class M_IT_TX_2(BaseAppAsdu):
     """
     Class for the M_IT_TG_2(8) and M_IT_TK_2(11) ASDUs
     """
-    IntegratedTotals = namedtuple('IntegratedTotals', ['address', 'total',
-                                                       'quality', 'datetime'])
 
     def __init__(self):
         self.valores = []
@@ -344,8 +346,8 @@ class M_IT_TX_2(BaseAppAsdu):
             total = struct.unpack("I",
                                   data[position + 1:position + 5])[0]
             quality = struct.unpack("B", data[position + 5:position + 6])[0]
-            self.valores.append(self.IntegratedTotals(address, total, quality,
-                                                      self.tiempo))
+            self.valores.append(IntegratedTotals(address, total, quality,
+                                                 self.tiempo))
 
 
 class M_IT_TK_2(M_IT_TX_2):
