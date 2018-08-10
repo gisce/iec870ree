@@ -15,7 +15,8 @@ __all__ = [
     'M_TI_TA_2',  # M type are responses no need to be listed
     'P_MP_NA_2',
     'C_TA_VC_2',
-    'C_TA_VM_2'
+    'C_TA_VM_2',
+    'C_CB_UN_2'
 ]
 
 BillingRegister = namedtuple('BillingRegister', ['address', 'active_abs',
@@ -368,6 +369,75 @@ class M_IT_TG_2(M_IT_TX_2):
     """
 
     type = 8
+
+
+class C_CB_UN_2(BaseAppAsdu):
+    """
+    Leer los bloques de totales integrados operacionales por intervalo de
+    tiempo para una dirección de objeto indicada
+    """
+    type = 190
+    data_length = 0x06
+    causa_tm = 6
+
+    def __init__(self, start_date=datetime.datetime.now(),
+                 end_date=datetime.datetime.now(), adr_object=10):
+        self.start_date = TimeA(start_date)
+        self.end_date = TimeA(end_date)
+        self.object = adr_object
+
+    def from_hex(self, data, cualificador_ev):
+        self.object = struct.unpack("B", data[0:1])[0]
+        self.start_date.from_hex(data[1:6])
+        self.end_date.from_hex(data[6:11])
+
+    def to_bytes(self):
+        response = bytearray()
+        response.extend(struct.pack("B", self.object))
+        response.extend(self.start_date.to_bytes())
+        response.extend(self.end_date.to_bytes())
+        return response
+
+    @property
+    def length(self):
+        return 0x14
+
+
+class M_IB_TK_2(BaseAppAsdu):
+    """
+    Bloques de totales integrados operacionales por intervalo de tiempo para una
+    dirección de objeto indicada
+    """
+    type = 140
+
+    def __init__(self):
+        self.valores = []
+        self.tiempo = None
+
+    def from_hex(self, data, cualificador_ev):
+        adr_aux = {
+            9: 8,
+            10: 6,
+            11: 3
+        }
+
+        position = 0
+        for i in range(0, cualificador_ev):
+            address = struct.unpack("B", data[position:position + 1])[0]
+            amount = adr_aux[address]
+            position += 1
+            time_pos = position + (amount * 5)
+            self.tiempo = TimeA()
+            self.tiempo.from_hex(data[time_pos:time_pos + 5])
+
+            for t in range(1, amount+1):
+                total = struct.unpack("I", data[position:position+4])[0]
+                quality = struct.unpack("B", data[position+4:position+5])[0]
+                self.valores.append(IntegratedTotals(t, total, quality,
+                                                     self.tiempo.datetime))
+                position += 5
+                if t == amount:
+                    position += 5
 
 
 class TimeA():

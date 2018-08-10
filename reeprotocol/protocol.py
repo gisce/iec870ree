@@ -66,7 +66,7 @@ class AppLayer(metaclass=ABCMeta):
                 raise ProtocolException("Didn't get ASDU")
             yield asdu_resp
 
-            if asdu_resp.causa_tm  == 0x05 and asdu_resp.tipo in [135, 136, 11, 8]:
+            if asdu_resp.causa_tm  == 0x05 and asdu_resp.tipo in [135, 136, 11, 8, 140]:
                 logger.info("Request for next period")
             elif asdu_resp.causa_tm  == 0x05:
                 logger.info("Request or asked")
@@ -160,6 +160,20 @@ class AppLayer(metaclass=ABCMeta):
             resps = list(self.process_request(asdu))
             for resp in self.process_requestresponse():
                 if resp.tipo == 136:
+                    yield resp
+        except IntegrationPeriodNotAvailable as e:
+            pass
+
+    def get_blocks_houly_profiles(self, start_date, end_date, register=11,
+                                  adr_object=10):
+        # 190
+        asdu = self.create_asdu_request(C_CB_UN_2(start_date=start_date, end_date=end_date,
+                                                  adr_object=adr_object), register)
+        # do not remove this as we have to iterate over physical layer frames.
+        try:
+            resps = list(self.process_request(asdu))
+            for resp in self.process_requestresponse():
+                if resp.tipo == 140:
                     yield resp
         except IntegrationPeriodNotAvailable as e:
             pass
