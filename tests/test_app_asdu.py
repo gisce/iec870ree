@@ -1,7 +1,9 @@
 from . import context
 import unittest
-from reeprotocol import app_asdu
 import datetime
+from reeprotocol import app_asdu
+from reeprotocol.app_asdu import IntegratedTotals, BillingRegister
+
 
 class TestAppAsdu(unittest.TestCase):
 
@@ -67,12 +69,45 @@ class TestAppAsdu(unittest.TestCase):
         self.assertEqual(c.tiempo_inicial.datetime, datetime.datetime(2018, 7, 1, 1))
         self.assertEqual(c.tiempo_final.datetime, datetime.datetime(2018, 8, 1, 0))
 
+    def test_C_CI_NT_2(self):
+        c = app_asdu.C_CI_NT_2(datetime.datetime(2018, 7, 1, 1),
+                               datetime.datetime(2018, 8, 1, 0))
+        self.assertEqual(c.to_bytes(), bytearray(bytes.fromhex("01 08 00 01 e1 07 12 00 00 61 08 12")))
+        self.assertEqual(c.length, 21)
+
+    def test_C_CI_NT_2_from_hex(self):
+        c = app_asdu.C_CI_NT_2()
+        c.from_hex(bytes.fromhex("01 08 00 01 e1 07 12 00 00 61 08 12"), 1)
+        self.assertEqual(c.primer_integrado, 1)
+        self.assertEqual(c.ultimo_integrado, 8)
+        self.assertEqual(c.tiempo_inicial.datetime, datetime.datetime(2018, 7, 1, 1))
+        self.assertEqual(c.tiempo_final.datetime, datetime.datetime(2018, 8, 1, 0))
+
     def test_M_IT_TK_2_from_hex(self):
         c = app_asdu.M_IT_TK_2()
         self.assertEqual(c.valores, [])
         self.assertEqual(c.tiempo, None)
         c.from_hex(bytes.fromhex("01 04 00 00 00 00 02 00 00 00 00 00 03 1b 00 00 00 00 04 00 00 00 00 00 05 00 00 00 00 00 06 00 00 00 00 00 07 00 00 00 00 80 08 00 00 00 00 80 00 81 e1 07 12"), 8)
 
-        self.assertEqual(c.valores, [(1, 4, 0), (2, 0, 0), (3, 27, 0), (4, 0, 0)
-            , (5, 0, 0), (6, 0, 0), (7, 0, 128), (8, 0, 128)])
+        self.assertEqual(c.valores, [IntegratedTotals(address=1, total=4, quality=0, datetime=datetime.datetime(2018, 7, 1, 1, 0)), IntegratedTotals(address=2, total=0, quality=0, datetime=datetime.datetime(2018, 7, 1, 1, 0)), IntegratedTotals(address=3, total=27, quality=0, datetime=datetime.datetime(2018, 7, 1, 1, 0)), IntegratedTotals(address=4, total=0, quality=0, datetime=datetime.datetime(2018, 7, 1, 1, 0)), IntegratedTotals(address=5, total=0, quality=0, datetime=datetime.datetime(2018, 7, 1, 1, 0)), IntegratedTotals(address=6, total=0, quality=0, datetime=datetime.datetime(2018, 7, 1, 1, 0)), IntegratedTotals(address=7, total=0, quality=128, datetime=datetime.datetime(2018, 7, 1, 1, 0)), IntegratedTotals(address=8, total=0, quality=128, datetime=datetime.datetime(2018, 7, 1, 1, 0))])
         self.assertEqual(c.tiempo.datetime, datetime.datetime(2018, 7, 1, 1))
+
+    def test_C_TA_VM_2(self):
+        c = app_asdu.C_TA_VM_2(datetime.datetime(2018, 7, 1, 1),
+                               datetime.datetime(2018, 8, 1, 0))
+        self.assertEqual(c.to_bytes(), bytearray(
+            bytes.fromhex("00 01 e1 07 12 00 00 61 08 12")))
+        self.assertEqual(c.length, 19)
+
+    def test_C_TA_VM_2_from_hex(self):
+        c = app_asdu.C_TA_VM_2()
+        c.from_hex(bytes.fromhex("00 01 e1 07 12 00 00 61 08 12"), 1)
+        self.assertEqual(c.start_date.datetime, datetime.datetime(2018, 7, 1, 1))
+        self.assertEqual(c.end_date.datetime, datetime.datetime(2018, 8, 1, 0))
+
+    def test_M_TA_VX_2_from_hex(self):
+        c = app_asdu.M_TA_VX_2()
+        self.assertEqual(c.valores, [])
+        c.from_hex(bytes.fromhex("14 74 37 3b 00 c0 6e 00 00 00 fb 59 1c 00 ba 5c 00 00 00 e4 bd 05 00 db 06 00 00 00 00 00 00 00 80 00 00 00 00 80 65 01 00 00 0f 87 f2 07 12 00 00 00 00 00 80 00 80 e1 07 12 00 80 61 08 12"), 1)
+        print(c.valores)
+        self.assertEqual(c.valores, [BillingRegister(address=20, active_abs=3880820, active_inc=28352, active_qual=0, reactive_abs_ind=1858043, reactive_inc_ind=23738, reactive_qua_ind=0, reactive_abs_cap=376292, reactive_inc_cap=1755, reactive_qual_cap=0, reserved_7=0, reserved_7_qual=128, reserved_8=0, reserved_8_qual=128, max_power=357, max_power_date=datetime.datetime(2018, 7, 18, 7, 15), max_power_qual=0, excess_power=0, ecxess_power_qual=128, date_start=datetime.datetime(2018, 7, 1, 0, 0), date_end=datetime.datetime(2018, 8, 1, 0, 0))])

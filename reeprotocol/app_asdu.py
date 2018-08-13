@@ -1,18 +1,33 @@
 import bitstring
 import struct
 import datetime
+from collections import namedtuple
 
 
 __all__ = [
     'C_AC_NA_2',
     'C_CI_NU_2',
+    'C_CI_NT_2',
     'C_FS_NA_2',
     'C_TI_NA_2',
     'C_RD_NA_2',
     'M_IT_TK_2',  # M type are responses no need to be listed
     'M_TI_TA_2',  # M type are responses no need to be listed
     'P_MP_NA_2',
+    'C_TA_VC_2',
+    'C_TA_VM_2',
+    'C_CB_UN_2'
 ]
+
+BillingRegister = namedtuple('BillingRegister', ['address', 'active_abs',
+    'active_inc', 'active_qual', 'reactive_abs_ind', 'reactive_inc_ind',
+    'reactive_qua_ind', 'reactive_abs_cap', 'reactive_inc_cap',
+    'reactive_qual_cap', 'reserved_7', 'reserved_7_qual', 'reserved_8',
+    'reserved_8_qual', 'max_power', 'max_power_date', 'max_power_qual',
+    'excess_power', 'ecxess_power_qual', 'date_start', 'date_end'])
+
+IntegratedTotals = namedtuple('IntegratedTotals', ['address', 'total', 'quality'
+                              , 'datetime'])
 
 
 class AppAsduRegistry(type):
@@ -33,6 +48,7 @@ class AppAsduRegistry(type):
 class BaseAppAsdu(metaclass=AppAsduRegistry):
 
     data_length = 0
+    type = 0
 
     @property
     def length(self):
@@ -148,13 +164,13 @@ class C_FS_NA_2(BaseAppAsdu):
         return bytes()
 
 
-class C_CI_NU_2(BaseAppAsdu):
+class C_CI_NX_2(BaseAppAsdu):
     """
+    Class for the C_CI_NT_2(122) and C_CI_NU_2(123) ASDUs
+
     Leer totales integrados operacionales repuestos periódicamente por intervalo
     de tiempo y rango de direcciones
     """
-
-    type = 123
     data_length = 0x06
     causa_tm = 6
 
@@ -184,7 +200,160 @@ class C_CI_NU_2(BaseAppAsdu):
         return 0x15
 
 
-class M_IT_TK_2(BaseAppAsdu):
+class C_CI_NT_2(C_CI_NX_2):
+    """
+    Class to read absolute measures
+    """
+    type = 122
+
+
+class C_CI_NU_2(C_CI_NX_2):
+    """
+    Class to read incremental measures
+    """
+    type = 123
+
+
+class C_TA_VC_2(BaseAppAsdu):
+    """
+    Leer Información de Tarificación (Valores en Curso)
+    """
+    type = 133
+    causa_tm = 6
+
+    # Register address: 134 or 135 or 136
+
+    def from_hex(self, data, cualificador_ev):
+        pass
+
+    def to_bytes(self):
+        return bytes()
+
+
+class C_TA_VM_2(BaseAppAsdu):
+    """
+    Leer Información de Tarificación (Valores Memorizados)
+    """
+    type = 134
+    data_length = 0x06
+    causa_tm = 6
+
+    # Register address: 134 or 135 or 136
+    def __init__(self, start_date=datetime.datetime.now(),
+                 end_date=datetime.datetime.now()):
+        self.start_date = TimeA(start_date)
+        self.end_date = TimeA(end_date)
+
+    def from_hex(self, data, cualificador_ev):
+        self.start_date.from_hex(data[0:5])
+        self.end_date.from_hex(data[5:10])
+
+    def to_bytes(self):
+        response = bytearray()
+        response.extend(self.start_date.to_bytes())
+        response.extend(self.end_date.to_bytes())
+        return response
+
+    @property
+    def length(self):
+        return 0x13
+
+
+class M_TA_VX_2(BaseAppAsdu):
+    """
+    Class for the M_TA_VC_2(135) and M_TA_VM_2(136) ASDUs
+    """
+    data_length = 0x06
+    causa_tm = 5
+
+    def __init__(self):
+        self.valores = []
+
+    def from_hex(self, data, cualificador_ev):
+        address = struct.unpack("B", data[0:1])[0]
+        # Active energy
+        active_abs = struct.unpack("I", data[1:5])[0]
+        active_inc = struct.unpack("I", data[5:9])[0]
+        active_qual = struct.unpack("B", data[9:10])[0]
+        # Inductive reactive energy
+        reactive_abs_ind = struct.unpack("I", data[10:14])[0]
+        reactive_inc_ind = struct.unpack("I", data[14:18])[0]
+        reactive_qua_ind = struct.unpack("B", data[18:19])[0]
+        # Absolute reactive energy
+        reactive_abs_cap = struct.unpack("I", data[19:23])[0]
+        reactive_inc_cap = struct.unpack("I", data[23:27])[0]
+        reactive_qual_cap = struct.unpack("B", data[27:28])[0]
+        # Reserved 7
+        reserved_7 = struct.unpack("I", data[28:32])[0]
+        reserved_7_qual = struct.unpack("B", data[32:33])[0]
+        # Reserved 8
+        reserved_8 = struct.unpack("I", data[33:37])[0]
+        reserved_8_qual = struct.unpack("B", data[37:38])[0]
+        # Maximum power
+        max_power = struct.unpack("I", data[38:42])[0]
+        max_power_date = TimeA()
+        max_power_date.from_hex(data[42:47])
+        max_power_qual = struct.unpack("B", data[47:48])[0]
+        # Excessive power
+        excess_power = struct.unpack("I", data[48:52])[0]
+        ecxess_power_qual = struct.unpack("B", data[52:53])[0]
+        # Period start date
+        date_start = TimeA()
+        date_start.from_hex(data[53:58])
+        # Period end date
+        date_end = TimeA()
+        date_end.from_hex(data[58:63])
+
+        br = BillingRegister(address, active_abs, active_inc, active_qual,
+        reactive_abs_ind, reactive_inc_ind, reactive_qua_ind, reactive_abs_cap,
+        reactive_inc_cap, reactive_qual_cap, reserved_7, reserved_7_qual,
+        reserved_8, reserved_8_qual, max_power, max_power_date.datetime,
+        max_power_qual, excess_power, ecxess_power_qual, date_start.datetime,
+        date_end.datetime)
+
+        self.valores.append(br)
+
+
+class M_TA_VC_2(M_TA_VX_2):
+    """
+    Información de Tarificación (Valores en Curso)
+    """
+    type = 135
+
+
+class M_TA_VM_2(M_TA_VX_2):
+    """
+    Información de Tarificación (Valores Memorizados)
+    """
+    type = 136
+
+
+class M_IT_TX_2(BaseAppAsdu):
+    """
+    Class for the M_IT_TG_2(8) and M_IT_TK_2(11) ASDUs
+    """
+
+    def __init__(self):
+        self.valores = []
+        self.tiempo = None
+
+    def from_hex(self, data, cualificador_ev):
+        time_pos = cualificador_ev * 6
+        self.tiempo = TimeA()
+        self.tiempo.from_hex(data[time_pos:time_pos + 5])
+        for i in range(0, cualificador_ev):
+            position = i * 6  # 1 byte de typo 4 de medida 1 de cualificador
+            # total integrado (4 octetos de energía+1 octeto con cualificadores
+            # y número de secuencia), para cada uno de los totales.
+            address = struct.unpack("B", data[position:position + 1])[0]
+            total = struct.unpack("I",
+                                  data[position + 1:position + 5])[0]
+            quality = struct.unpack("B", data[position + 5:position + 6])[0]
+            self.valores.append(IntegratedTotals(address, total, quality,
+                                                 self.tiempo.datetime))
+
+
+class M_IT_TK_2(M_IT_TX_2):
     """
     Totales integrados operacionales repuestos periódicamente, 4 octetos
     (incrementos de energía, en kWh o kVARh)
@@ -192,25 +361,83 @@ class M_IT_TK_2(BaseAppAsdu):
 
     type = 11
 
+
+class M_IT_TG_2(M_IT_TX_2):
+    """
+    Totales integrados operacionales, 4 octetos (lecturas de contadores
+    absolutos, en kWh o kVARh)
+    """
+
+    type = 8
+
+
+class C_CB_UN_2(BaseAppAsdu):
+    """
+    Leer los bloques de totales integrados operacionales por intervalo de
+    tiempo para una dirección de objeto indicada
+    """
+    type = 190
+    data_length = 0x06
+    causa_tm = 6
+
+    def __init__(self, start_date=datetime.datetime.now(),
+                 end_date=datetime.datetime.now(), adr_object=10):
+        self.start_date = TimeA(start_date)
+        self.end_date = TimeA(end_date)
+        self.object = adr_object
+
+    def from_hex(self, data, cualificador_ev):
+        self.object = struct.unpack("B", data[0:1])[0]
+        self.start_date.from_hex(data[1:6])
+        self.end_date.from_hex(data[6:11])
+
+    def to_bytes(self):
+        response = bytearray()
+        response.extend(struct.pack("B", self.object))
+        response.extend(self.start_date.to_bytes())
+        response.extend(self.end_date.to_bytes())
+        return response
+
+    @property
+    def length(self):
+        return 0x14
+
+
+class M_IB_TK_2(BaseAppAsdu):
+    """
+    Bloques de totales integrados operacionales por intervalo de tiempo para una
+    dirección de objeto indicada
+    """
+    type = 140
+
     def __init__(self):
         self.valores = []
         self.tiempo = None
 
     def from_hex(self, data, cualificador_ev):
+        adr_aux = {
+            9: 8,
+            10: 6,
+            11: 3
+        }
+
+        position = 0
         for i in range(0, cualificador_ev):
-            position = i * 6  # 1 byte de typo 4 de medida 1 de cualificador
-            # total integrado (4 octetos de energía+1 octeto con cualificadores
-            # y número de secuencia), para cada uno de los totales.
-            direccion_objeto = struct.unpack("B", data[position:position+1])[0]
-            total_integrado = struct.unpack("I",
-                                            data[position + 1:position + 5])[0]
-            cualificador = struct.unpack("B", data[position+5:position+6])[0]
-            self.valores.append((direccion_objeto,
-                                 total_integrado, cualificador))
-        position = position + 6
-        # ok, ahora el tiempo
-        self.tiempo = TimeA()
-        self.tiempo.from_hex(data[position:position+5])
+            address = struct.unpack("B", data[position:position + 1])[0]
+            amount = adr_aux[address]
+            position += 1
+            time_pos = position + (amount * 5)
+            self.tiempo = TimeA()
+            self.tiempo.from_hex(data[time_pos:time_pos + 5])
+
+            for t in range(1, amount+1):
+                total = struct.unpack("I", data[position:position+4])[0]
+                quality = struct.unpack("B", data[position+4:position+5])[0]
+                self.valores.append(IntegratedTotals(t, total, quality,
+                                                     self.tiempo.datetime))
+                position += 5
+                if t == amount:
+                    position += 5
 
 
 class TimeA():
@@ -295,21 +522,22 @@ class TimeA():
                                  self.hour, self.minute)
 
     def __repr__(self):
-        output = "  -- TiempoA Begin -- \n"
-        output += "    minute: " + str(self.minute) + "\n"
-        output += "    TIS: " + str(self.TIS) + "\n"
-        output += "    IV: " + str(self.IV) + "\n"
-        output += "    hour: " + str(self.hour) + "\n"
-        output += "    RES1: " + str(self.RES1) + "\n"
-        output += "    SU: " + str(self.SU) + "\n"
-        output += "    dayofmonth: " + str(self.dayofmonth) + "\n"
-        output += "    dayofweek: " + str(self.dayofweek) + "\n"
-        output += "    month: " + str(self.month) + "\n"
-        output += "    ETI: " + str(self.ETI) + "\n"
-        output += "    PTI: " + str(self.PTI) + "\n"
-        output += "    year: " + str(self.year) + "\n"
-        output += ("    content: "
-                   + (":".join("%02x" % b for b in self.to_bytes())) + "\n")
-        output += "    datetime: " + str(self.datetime) + "\n"
-        output += "  -- TiempoA End \n"
+        # output = "  -- TiempoA Begin -- \n"
+        # output += "    minute: " + str(self.minute) + "\n"
+        # output += "    TIS: " + str(self.TIS) + "\n"
+        # output += "    IV: " + str(self.IV) + "\n"
+        # output += "    hour: " + str(self.hour) + "\n"
+        # output += "    RES1: " + str(self.RES1) + "\n"
+        # output += "    SU: " + str(self.SU) + "\n"
+        # output += "    dayofmonth: " + str(self.dayofmonth) + "\n"
+        # output += "    dayofweek: " + str(self.dayofweek) + "\n"
+        # output += "    month: " + str(self.month) + "\n"
+        # output += "    ETI: " + str(self.ETI) + "\n"
+        # output += "    PTI: " + str(self.PTI) + "\n"
+        # output += "    year: " + str(self.year) + "\n"
+        # output += ("    content: "
+        #            + (":".join("%02x" % b for b in self.to_bytes())) + "\n")
+        # output += "    datetime: " + str(self.datetime) + "\n"
+        # output += "  -- TiempoA End \n"
+        # return output
         return str(self.datetime)

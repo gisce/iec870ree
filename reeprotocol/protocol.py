@@ -63,63 +63,109 @@ class AppLayer(metaclass=ABCMeta):
             self.link_layer.send_frame(asdu)
             asdu_resp = self.link_layer.get_frame()
             if not asdu_resp:
+                logger.error("Did not receive ASDU response.")
                 raise ProtocolException("Didn't get ASDU")
             yield asdu_resp
 
-            if asdu_resp.causa_tm  == 0x05:
+            if asdu_resp.causa_tm == 0x05 and asdu_resp.tipo in [135, 136, 11, 8, 140]:
+                logger.info("Received request for next batch of information")
+            elif asdu_resp.causa_tm == 0x05:
                 logger.info("Request or asked")
                 break
-            elif asdu_resp.causa_tm  == 0x07:
-                logger.info("activation confirmation")
+            elif asdu_resp.causa_tm == 0x07:
+                logger.info("Activation confirmation")
                 break
-            elif asdu_resp.causa_tm  == 0x0A:
+            elif asdu_resp.causa_tm == 0x0A:
                 logger.info("Activation terminated")
                 break
-            elif asdu_resp.causa_tm  == 0x0E:
-                logger.info("requested ASDU-type not available")
+            elif asdu_resp.causa_tm == 0x0E:
+                logger.error("Requested ASDU-type not available")
                 raise RequestedASDUTypeNotAvailable()
             elif asdu_resp.causa_tm == 0x12:
-                logger.info("requested integration period not available")
+                logger.error("Requested integration period not available")
+                raise IntegrationPeriodNotAvailable()
+            elif asdu_resp.causa_tm == 0x11:
+                logger.error("Requested information object not available")
                 raise IntegrationPeriodNotAvailable()
             else:
-                raise Exception('causa no detectada')
+                raise Exception('ERROR: Transmission cause unknown: {}'.format(asdu_resp.causa_tm))
 
     def authenticate(self, clave_pm):
+        #183
         asdu = self.create_asdu_request(C_AC_NA_2(clave_pm))
         resps = list(self.process_request(asdu))
         return resps[0]
 
     def finish_session(self):
+        #187
         asdu = self.create_asdu_request(C_FS_NA_2())
         try:
             resps = list(self.process_request(asdu))
         except Exception as e:
             logger.exception("error finishing session {}".format(e))
-        
-    def read_integrated_totals(self, start_date, end_date, register=11):
+
+    def read_daily_billings(self, start_date, end_date, register=21):
+        #122
+        asdu = self.create_asdu_request(C_CI_NT_2(start_date, end_date),
+                                        register)
+        #do not remove this as we have to iterate over physical layer frames.
+        resps = list(self.process_request(asdu))
+        for resp in self.process_requestresponse():
+            if resp.tipo == 8:
+                yield resp
+
+    def read_hourly_profiles(self, start_date, end_date, register=11):
+        #123
         asdu = self.create_asdu_request(C_CI_NU_2(start_date, end_date),
                                         register)
         #do not remove this as we have to iterate over physical layer frames.
-        try:
-            resps = list(self.process_request(asdu))
-            for resp in self.process_requestresponse():
+        resps = list(self.process_request(asdu))
+        for resp in self.process_requestresponse():
+            if resp.tipo == 11:
                 yield resp
-        except IntegrationPeriodNotAvailable as e:
-            pass
-    
+
     def read_datetime(self):
         #103
         asdu = self.create_asdu_request(C_TI_NA_2())
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            yield resp
+            if resp.tipo == 72:
+                yield resp
 
     def get_info(self):
         #100
         asdu = self.create_asdu_request(C_RD_NA_2())
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            yield resp
+            if resp.tipo == 71:
+                yield resp
+
+    def current_tariff_info(self, register=134):
+        #133 current values
+        asdu = self.create_asdu_request(C_TA_VC_2(), register)
+        resps = list(self.process_request(asdu))
+        for resp in self.process_requestresponse():
+            if resp.tipo == 135:
+                yield resp
+
+    def stored_tariff_info(self, start_date, end_date, register=134):
+        #134 stored values
+        asdu = self.create_asdu_request(C_TA_VM_2(start_date, end_date), register)
+        resps = list(self.process_request(asdu))
+        for resp in self.process_requestresponse():
+            if resp.tipo == 136:
+                yield resp
+
+    def get_blocks_hourly_profiles(self, start_date, end_date, register=11,
+                                  adr_object=10):
+        # 190
+        asdu = self.create_asdu_request(C_CB_UN_2(start_date=start_date, end_date=end_date,
+                                                  adr_object=adr_object), register)
+        # do not remove this as we have to iterate over physical layer frames.
+        resps = list(self.process_request(asdu))
+        for resp in self.process_requestresponse():
+            if resp.tipo == 140:
+                yield resp
 
     def create_asdu_request(self, user_data, registro=0):
         asdu = VariableAsdu()
