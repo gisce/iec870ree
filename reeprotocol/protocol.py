@@ -63,28 +63,32 @@ class AppLayer(metaclass=ABCMeta):
             self.link_layer.send_frame(asdu)
             asdu_resp = self.link_layer.get_frame()
             if not asdu_resp:
+                logger.error("Did not receive ASDU response.")
                 raise ProtocolException("Didn't get ASDU")
             yield asdu_resp
 
-            if asdu_resp.causa_tm  == 0x05 and asdu_resp.tipo in [135, 136, 11, 8, 140]:
-                logger.info("Request for next period")
-            elif asdu_resp.causa_tm  == 0x05:
+            if asdu_resp.causa_tm == 0x05 and asdu_resp.tipo in [135, 136, 11, 8, 140]:
+                logger.info("Received request for next batch of information")
+            elif asdu_resp.causa_tm == 0x05:
                 logger.info("Request or asked")
                 break
-            elif asdu_resp.causa_tm  == 0x07:
-                logger.info("activation confirmation")
+            elif asdu_resp.causa_tm == 0x07:
+                logger.info("Activation confirmation")
                 break
-            elif asdu_resp.causa_tm  == 0x0A:
+            elif asdu_resp.causa_tm == 0x0A:
                 logger.info("Activation terminated")
                 break
-            elif asdu_resp.causa_tm  == 0x0E:
-                logger.info("requested ASDU-type not available")
+            elif asdu_resp.causa_tm == 0x0E:
+                logger.error("Requested ASDU-type not available")
                 raise RequestedASDUTypeNotAvailable()
             elif asdu_resp.causa_tm == 0x12:
-                logger.info("requested integration period not available")
+                logger.error("Requested integration period not available")
+                raise IntegrationPeriodNotAvailable()
+            elif asdu_resp.causa_tm == 0x11:
+                logger.error("Requested information object not available")
                 raise IntegrationPeriodNotAvailable()
             else:
-                raise Exception('causa no detectada')
+                raise Exception('ERROR: Transmission cause unknown: {}'.format(asdu_resp.causa_tm))
 
     def authenticate(self, clave_pm):
         #183
@@ -164,7 +168,7 @@ class AppLayer(metaclass=ABCMeta):
         except IntegrationPeriodNotAvailable as e:
             pass
 
-    def get_blocks_houly_profiles(self, start_date, end_date, register=11,
+    def get_blocks_hourly_profiles(self, start_date, end_date, register=11,
                                   adr_object=10):
         # 190
         asdu = self.create_asdu_request(C_CB_UN_2(start_date=start_date, end_date=end_date,
