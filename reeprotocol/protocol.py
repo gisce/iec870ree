@@ -109,27 +109,21 @@ class AppLayer(metaclass=ABCMeta):
         asdu = self.create_asdu_request(C_CI_NT_2(start_date, end_date),
                                         register)
         #do not remove this as we have to iterate over physical layer frames.
-        try:
-            resps = list(self.process_request(asdu))
-            for resp in self.process_requestresponse():
-                if resp.tipo == 8:
-                    yield resp
-        except IntegrationPeriodNotAvailable as e:
-            pass
+        resps = list(self.process_request(asdu))
+        for resp in self.process_requestresponse():
+            if resp.tipo == 8:
+                yield resp
 
     def read_hourly_profiles(self, start_date, end_date, register=11):
         #123
         asdu = self.create_asdu_request(C_CI_NU_2(start_date, end_date),
                                         register)
         #do not remove this as we have to iterate over physical layer frames.
-        try:
-            resps = list(self.process_request(asdu))
-            for resp in self.process_requestresponse():
-                if resp.tipo == 11:
-                    yield resp
-        except IntegrationPeriodNotAvailable as e:
-            pass
-    
+        resps = list(self.process_request(asdu))
+        for resp in self.process_requestresponse():
+            if resp.tipo == 11:
+                yield resp
+
     def read_datetime(self):
         #103
         asdu = self.create_asdu_request(C_TI_NA_2())
@@ -149,24 +143,18 @@ class AppLayer(metaclass=ABCMeta):
     def current_tariff_info(self, register=134):
         #133 current values
         asdu = self.create_asdu_request(C_TA_VC_2(), register)
-        try:
-            resps = list(self.process_request(asdu))
-            for resp in self.process_requestresponse():
-                if resp.tipo == 135:
-                    yield resp
-        except IntegrationPeriodNotAvailable as e:
-            pass
+        resps = list(self.process_request(asdu))
+        for resp in self.process_requestresponse():
+            if resp.tipo == 135:
+                yield resp
 
     def stored_tariff_info(self, start_date, end_date, register=134):
         #134 stored values
         asdu = self.create_asdu_request(C_TA_VM_2(start_date, end_date), register)
-        try:
-            resps = list(self.process_request(asdu))
-            for resp in self.process_requestresponse():
-                if resp.tipo == 136:
-                    yield resp
-        except IntegrationPeriodNotAvailable as e:
-            pass
+        resps = list(self.process_request(asdu))
+        for resp in self.process_requestresponse():
+            if resp.tipo == 136:
+                yield resp
 
     def get_blocks_hourly_profiles(self, start_date, end_date, register=11,
                                   adr_object=10):
@@ -174,13 +162,10 @@ class AppLayer(metaclass=ABCMeta):
         asdu = self.create_asdu_request(C_CB_UN_2(start_date=start_date, end_date=end_date,
                                                   adr_object=adr_object), register)
         # do not remove this as we have to iterate over physical layer frames.
-        try:
-            resps = list(self.process_request(asdu))
-            for resp in self.process_requestresponse():
-                if resp.tipo == 140:
-                    yield resp
-        except IntegrationPeriodNotAvailable as e:
-            pass
+        resps = list(self.process_request(asdu))
+        for resp in self.process_requestresponse():
+            if resp.tipo == 140:
+                yield resp
 
     def create_asdu_request(self, user_data, registro=0):
         asdu = VariableAsdu()
