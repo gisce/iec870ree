@@ -111,7 +111,7 @@ class AppLayer(metaclass=ABCMeta):
         #do not remove this as we have to iterate over physical layer frames.
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if resp.tipo == 8:
+            if resp.tipo == M_IT_TG_2.type:
                 yield resp
 
     def read_hourly_profiles(self, start_date, end_date, register=11):
@@ -121,7 +121,7 @@ class AppLayer(metaclass=ABCMeta):
         #do not remove this as we have to iterate over physical layer frames.
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if resp.tipo == 11:
+            if resp.tipo == M_IT_TK_2.type:
                 yield resp
 
     def read_datetime(self):
@@ -129,7 +129,7 @@ class AppLayer(metaclass=ABCMeta):
         asdu = self.create_asdu_request(C_TI_NA_2())
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if resp.tipo == 72:
+            if resp.tipo == M_TI_TA_2.type:
                 yield resp
 
     def get_info(self):
@@ -137,7 +137,7 @@ class AppLayer(metaclass=ABCMeta):
         asdu = self.create_asdu_request(C_RD_NA_2())
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if resp.tipo == 71:
+            if resp.tipo == P_MP_NA_2.type:
                 yield resp
 
     def current_tariff_info(self, register=134):
@@ -145,7 +145,7 @@ class AppLayer(metaclass=ABCMeta):
         asdu = self.create_asdu_request(C_TA_VC_2(), register)
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if resp.tipo == 135:
+            if resp.tipo == M_TA_VC_2.type:
                 yield resp
 
     def stored_tariff_info(self, start_date, end_date, register=134):
@@ -153,7 +153,7 @@ class AppLayer(metaclass=ABCMeta):
         asdu = self.create_asdu_request(C_TA_VM_2(start_date, end_date), register)
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if resp.tipo == 136:
+            if resp.tipo == M_TA_VM_2.type:
                 yield resp
 
     def get_blocks_hourly_profiles(self, start_date, end_date, register=11,
