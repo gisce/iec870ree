@@ -10,6 +10,26 @@ import math
 logger = logging.getLogger('reeprotocol')
 
 
+CONTRACTS_REGISTERS = {
+    1: 134,
+    2: 135,
+    3: 136
+}
+
+
+READINGS_REGISTERS = {
+    'profiles': 11,
+    'daily_billings': 21
+}
+
+
+REQUESTS_TYPES = {
+    0: 9,
+    1: 10,
+    2: 11
+}
+
+
 def parse_asdu(trama):
     p = AsduParser()
     for x in range(0, len(trama), 2):
@@ -104,24 +124,34 @@ class AppLayer(metaclass=ABCMeta):
         except Exception as e:
             logger.exception("error finishing session {}".format(e))
 
-    def read_daily_billings(self, start_date, end_date, register=21):
+    def read_absolute_values(self, start_date, end_date, register='daily_billings'):
         #122
+        if register in READINGS_REGISTERS:
+            register = READINGS_REGISTERS[register]
+        else:
+            logger.error("Wrong values for register")
+            raise ValueError
         asdu = self.create_asdu_request(C_CI_NT_2(start_date, end_date),
                                         register)
         #do not remove this as we have to iterate over physical layer frames.
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if resp.tipo == 8:
+            if resp.tipo == M_IT_TG_2.type:
                 yield resp
 
-    def read_hourly_profiles(self, start_date, end_date, register=11):
+    def read_incremental_values(self, start_date, end_date, register='profiles'):
         #123
+        if register in READINGS_REGISTERS:
+            register = READINGS_REGISTERS[register]
+        else:
+            logger.error("Wrong values for register")
+            raise ValueError
         asdu = self.create_asdu_request(C_CI_NU_2(start_date, end_date),
                                         register)
         #do not remove this as we have to iterate over physical layer frames.
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if resp.tipo == 11:
+            if resp.tipo == M_IT_TK_2.type:
                 yield resp
 
     def read_datetime(self):
@@ -129,7 +159,7 @@ class AppLayer(metaclass=ABCMeta):
         asdu = self.create_asdu_request(C_TI_NA_2())
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if resp.tipo == 72:
+            if resp.tipo == M_TI_TA_2.type:
                 yield resp
 
     def get_info(self):
@@ -137,28 +167,44 @@ class AppLayer(metaclass=ABCMeta):
         asdu = self.create_asdu_request(C_RD_NA_2())
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if resp.tipo == 71:
+            if resp.tipo == P_MP_NA_2.type:
                 yield resp
 
-    def current_tariff_info(self, register=134):
+    def current_tariff_info(self, register=1):
         #133 current values
+        if register in CONTRACTS_REGISTERS:
+            register = CONTRACTS_REGISTERS[register]
+        else:
+            logger.error("Wrong values for register")
+            raise ValueError
         asdu = self.create_asdu_request(C_TA_VC_2(), register)
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if resp.tipo == 135:
+            if resp.tipo == M_TA_VC_2.type:
                 yield resp
 
-    def stored_tariff_info(self, start_date, end_date, register=134):
+    def stored_tariff_info(self, start_date, end_date, register=1):
         #134 stored values
+        if register in CONTRACTS_REGISTERS:
+            register = CONTRACTS_REGISTERS[register]
+        else:
+            logger.error("Wrong values for register")
+            raise ValueError
         asdu = self.create_asdu_request(C_TA_VM_2(start_date, end_date), register)
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if resp.tipo == 136:
+            if resp.tipo == M_TA_VM_2.type:
                 yield resp
 
-    def get_blocks_hourly_profiles(self, start_date, end_date, register=11,
-                                  adr_object=10):
+    def read_blocks_incremental_values(self, start_date, end_date,
+                                       register='profiles', adr_object=1):
         # 190
+        if register in READINGS_REGISTERS and adr_object in REQUESTS_TYPES:
+            register = READINGS_REGISTERS[register]
+            adr_object = REQUESTS_TYPES[adr_object]
+        else:
+            logger.error("Wrong values for register and/or request")
+            raise ValueError
         asdu = self.create_asdu_request(C_CB_UN_2(start_date=start_date, end_date=end_date,
                                                   adr_object=adr_object), register)
         # do not remove this as we have to iterate over physical layer frames.
