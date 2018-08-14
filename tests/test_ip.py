@@ -1,5 +1,9 @@
 import unittest
-from unittest.mock import patch, Mock, MagicMock
+from six import PY2
+if PY2:
+    from mock import patch, Mock, MagicMock
+else:
+    from unittest.mock import patch, Mock, MagicMock
 import logging
 
 from reeprotocol.ip import Ip
@@ -25,7 +29,7 @@ class TestIp(unittest.TestCase):
         ip = Ip(('example.org', 20000))
         ip.connect()
         self.assertTrue(ip.connected)
-        self.assertIsInstance(ip.connection, unittest.mock.MagicMock)
+        self.assertIsInstance(ip.connection, MagicMock)
         ip.disconnect()
     
     @patch('socket.create_connection')
@@ -33,14 +37,14 @@ class TestIp(unittest.TestCase):
         m_socket = MagicMock()
         m_socket.recv = Mock()
         m_socket.recv.side_effect = [
-            bytes([1, 2]),
-            bytes([3, 4]),
-            bytes([5, 6])
+            bytearray([1, 2]),
+            bytearray([3, 4]),
+            bytearray([5, 6])
         ]
         mock_socket.return_value = m_socket
         ip = Ip(('example.org', 20000))
         ip.connect()
         self.assertTrue(ip.connected)
-        self.assertIsInstance(ip.connection, unittest.mock.MagicMock)
+        self.assertIsInstance(ip.connection, MagicMock)
         self.assertEqual(ip.get_byte(), 1)
         ip.disconnect()

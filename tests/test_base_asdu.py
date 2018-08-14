@@ -7,14 +7,14 @@ class TestASDUParser(unittest.TestCase):
     def test_fixed_asdu(self):
         parser = reeprotocol.base_asdu.AsduParser()
 
-        fixed_asdu = bytes.fromhex("10 00 0c 87 93 16")
+        fixed_asdu = bytearray.fromhex("10 00 0c 87 93 16")
         for b in fixed_asdu:
             asdu = parser.append_and_get_if_completed(b)
 
         self.assertIsInstance(asdu, reeprotocol.base_asdu.FixedAsdu)
 
     def test_variable_asdu(self):
-        var_asdu = bytes.fromhex("68 0D 0D 68"+"73"
+        var_asdu = bytearray.fromhex("68 0D 0D 68"+"73"
                                  + "0C 87" + "B7 01 06"
                                  + "01 00" + "00" +"07 00 00 00"
                                  +"CC"+ "16")
@@ -27,7 +27,7 @@ class TestASDUParser(unittest.TestCase):
 class TestFixedAsdu(unittest.TestCase):
     
     def test_create_asdu1(self):
-        fixed_asdu = bytes.fromhex("10 00 0c 87 93 16")
+        fixed_asdu = bytearray.fromhex("10 00 0c 87 93 16")
         asdu = reeprotocol.base_asdu.FixedAsdu()
         for b in fixed_asdu: asdu.append(b)
         self.assertTrue(asdu.completed)
@@ -35,7 +35,7 @@ class TestFixedAsdu(unittest.TestCase):
         self.assertEqual(asdu.buffer, fixed_asdu)
 
     def test_create_asdu2(self):
-        fixed_asdu = bytes.fromhex("10 49 0c 87 DC 16")
+        fixed_asdu = bytearray.fromhex("10 49 0c 87 DC 16")
         asdu = reeprotocol.base_asdu.FixedAsdu()
         for b in fixed_asdu: asdu.append(b)
         self.assertTrue(asdu.completed)
@@ -51,7 +51,7 @@ class TestFixedAsdu(unittest.TestCase):
         asdu.c.cf = 9
         asdu.der = 34572
         asdu.generate()
-        fixed_asdu = bytes.fromhex("10 49 0c 87 DC 16")
+        fixed_asdu = bytearray.fromhex("10 49 0c 87 DC 16")
         self.assertEqual(asdu.buffer, fixed_asdu)
 
 class TestVariableAsdu(unittest.TestCase):
@@ -70,9 +70,9 @@ class TestVariableAsdu(unittest.TestCase):
         asdu.dir_registro = 0
 
         #asdu.content = ree.C_AC_NA_2(8)
-        asdu.data = bytes.fromhex('08 00 00 00')
+        asdu.data = bytearray.fromhex('08 00 00 00')
         asdu.generate()
-        var_asdu = bytes.fromhex("68 0d 0d 68 73 0c 87 b7 01 06 01 00 00"
+        var_asdu = bytearray.fromhex("68 0d 0d 68 73 0c 87 b7 01 06 01 00 00"
                                  "08 00 00 00"
                                  "cd 16")
         self.assertEqual(asdu.buffer, var_asdu)

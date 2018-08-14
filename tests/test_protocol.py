@@ -19,8 +19,8 @@ class TestLinkLayer(unittest.TestCase):
         link_layer = protocol.LinkLayer()
         link_layer.initialize(physical_layer)
 
-        fixed_asdu = bytes.fromhex("10 49 0c 87 DC 16")
-        variable_asdu = bytes.fromhex("68 0d 0d 68 08 95 d1 b7 01"
+        fixed_asdu = bytearray.fromhex("10 49 0c 87 DC 16")
+        variable_asdu = bytearray.fromhex("68 0d 0d 68 08 95 d1 b7 01"
                                       "07 01 00 00 01 00 00 00 2f 16")
 
         physical_layer.to_receive = variable_asdu
@@ -46,7 +46,7 @@ class TestLinkLayer(unittest.TestCase):
         link_layer = protocol.LinkLayer(der = 1)
         link_layer.initialize(physical_layer)
 
-        physical_layer.to_receive =  bytes.fromhex("10 0b 95 d1 71 16")
+        physical_layer.to_receive =  bytearray.fromhex("10 0b 95 d1 71 16")
         link_layer.link_state_request()
 
     def test_remote_link_reposition(self):
@@ -54,7 +54,7 @@ class TestLinkLayer(unittest.TestCase):
         link_layer = protocol.LinkLayer(der = 1)
         link_layer.initialize(physical_layer)
 
-        physical_layer.to_receive =  bytes.fromhex("10 00 95 d1 66 16")
+        physical_layer.to_receive =  bytearray.fromhex("10 00 95 d1 66 16")
         link_layer.remote_link_reposition()
 
 class TestAppLayer(unittest.TestCase):
