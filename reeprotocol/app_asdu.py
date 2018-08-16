@@ -471,7 +471,6 @@ class TimeA():
         self.RES2 = 0  # BS1
 
     def from_hex(self, data):
-        print('a', data)
         reversed_bytes = bitstring.BitArray(bytearray(reversed(data)))
         reversed_bits = bitstring.BitStream(reversed(reversed_bytes))
         self.minute = bitstring.BitArray(reversed(reversed_bits.read(6))).uint
