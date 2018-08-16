@@ -1,6 +1,10 @@
 from .protocol import PhysicalLayer
 import threading
-import queue
+import six
+if six.PY2:
+    import Queue as queue
+else:
+    import queue
 import serial
 import time
 import logging
@@ -30,7 +34,7 @@ class Modem(PhysicalLayer):
             self.initialize_modem()
         except Exception as e:
             self.disconnect()
-            raise ConnectionError(e)
+            raise ModemException(e)
 
     def connect_port(self):
         max_tries = 20
@@ -81,7 +85,7 @@ class Modem(PhysicalLayer):
             except queue.Empty:
                 logger.info("nothing yet...")
                 time.sleep(1)
-        raise ConnectionError("Error Waiting for connection")
+        raise ModemException("Error Waiting for connection")
 
     def disconnect(self):
         if not self.connected:
@@ -117,12 +121,16 @@ class Modem(PhysicalLayer):
 
     def writeat(self, value):
         logger.info("sending command " + value)
-        self.write((value + "\r").encode("ascii"))
+        if isinstance(value, six.text_type):
+            to_write = (value + u"\r").encode("ascii")
+        else:
+            to_write = (value + b"\r")
+        self.write(to_write)
 
     def write(self, value):
         if not self.connected:
             raise ModemException("modem not connected")
-        logger.debug("->" + ":".join("%02x" % b for b in value))
+        logger.debug("->" + ":".join("%02x" % b for b in bytearray(value)))
         self.sport.write(value)
 
     def read_port(self, read_queue):
@@ -133,7 +141,7 @@ class Modem(PhysicalLayer):
             response = self.sport.read(1)
             if not response:
                 continue
-            logger.debug("<-" + ":".join("%02x" % b for b in response))
+            logger.debug("<-" + ":".join("%02x" % b for b in bytearray(response)))
 
             for b in response:
                 # if not self.data_mode and (b == 0x0A or b == 0x0D):

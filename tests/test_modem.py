@@ -1,9 +1,14 @@
 from . import context
 import unittest
 from reeprotocol import modem
-from unittest.mock import patch, MagicMock
+import six
+if six.PY2:
+    from mock import patch, MagicMock
+else:
+    from unittest.mock import patch, MagicMock
 import logging
 from collections import OrderedDict
+logging.basicConfig(level=logging.DEBUG)
 
 class TestModem(unittest.TestCase):
 
@@ -81,7 +86,7 @@ class MockSerial():
         time.sleep(1)
         if self.data_mode:
             logging.info("Mock DATAMODE READ")
-            return b'A\x0a'
+            return bytearray(b'A\x0a')
 
         try:
             logging.info("Mock NOT DATAMODE READ")
@@ -95,8 +100,8 @@ class MockSerial():
         pass
 
     RESPONSES_COMMAND_MODE = OrderedDict([
-        (b'ATZ\x0d', b'ATZ\x0d\x0a' + b'OK\x0d\x0a'),
-        (b'AT+CBST=7,0,1\x0d', b'AT+CBST=7,0,1\x0d\x0d\x0a' + b'OK\x0d\x0a'),
-        (b'ATD636813395\x0d', b'ATD636813395\x0d\x0d\x0a'
-        + b'CONNECT 9600/RLP\x0d\x0a'),
+        (b'ATZ\x0d', bytearray(b'ATZ\x0d\x0a' + b'OK\x0d\x0a')),
+        (b'AT+CBST=7,0,1\x0d', bytearray(b'AT+CBST=7,0,1\x0d\x0d\x0a' + b'OK\x0d\x0a')),
+        (b'ATD636813395\x0d', bytearray(b'ATD636813395\x0d\x0d\x0a'
+        + b'CONNECT 9600/RLP\x0d\x0a')),
     ])
