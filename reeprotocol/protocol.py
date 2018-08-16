@@ -87,7 +87,11 @@ class AppLayer(metaclass=ABCMeta):
                 raise ProtocolException("Didn't get ASDU")
             yield asdu_resp
 
-            if asdu_resp.causa_tm == 0x05 and asdu_resp.tipo in [135, 136, 11, 8, 140]:
+            if not isinstance(asdu_resp, VariableAsdu):
+                continue
+            if asdu_resp.causa_tm == 0x05 and asdu_resp.tipo in [
+                M_TA_VC_2.type, M_TA_VM_2.type, M_IT_TK_2.type, M_IT_TG_2.type,
+                M_IB_TK_2.type]:
                 logger.info("Received request for next batch of information")
             elif asdu_resp.causa_tm == 0x05:
                 logger.info("Request or asked")
@@ -158,17 +162,17 @@ class AppLayer(metaclass=ABCMeta):
         #103
         asdu = self.create_asdu_request(C_TI_NA_2())
         resps = list(self.process_request(asdu))
-        for resp in self.process_requestresponse():
-            if resp.tipo == M_TI_TA_2.type:
-                yield resp
+        for resp in resps:
+            if isinstance(resp, VariableAsdu) and resp.tipo == M_TI_TA_2.type:
+                return resp
 
     def get_info(self):
         #100
         asdu = self.create_asdu_request(C_RD_NA_2())
         resps = list(self.process_request(asdu))
-        for resp in self.process_requestresponse():
-            if resp.tipo == P_MP_NA_2.type:
-                yield resp
+        for resp in resps:
+            if isinstance(resp, VariableAsdu) and resp.tipo == P_MP_NA_2.type:
+                return resp
 
     def current_tariff_info(self, register=1):
         #133 current values
