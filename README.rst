@@ -1,11 +1,8 @@
 reeprotocol
 ###########
 
-.. image:: https://travis-ci.org/javierdelapuente/reeprotocol.svg?branch=master
-    :target: https://travis-ci.org/javierdelapuente/reeprotocol
-
-.. image:: https://coveralls.io/repos/github/javierdelapuente/reeprotocol/badge.svg?branch=master
-    :target: https://coveralls.io/github/javierdelapuente/reeprotocol?branch=master
+.. image:: https://travis-ci.com/gisce/reeprotocol.svg?branch=gisce
+    :target: https://travis-ci.com/gisce/reeprotocol
 	     
 
 IEC-870-5-102 for REE Spanish Electric meters
