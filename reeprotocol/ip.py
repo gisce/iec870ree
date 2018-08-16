@@ -59,7 +59,7 @@ class Ip(PhysicalLayer):
         logger.debug("Start reading port for %s", self.addr)
         while self.alive.is_set():
             try:
-                response = self.connection.recv(16)
+                response = bytearray(self.connection.recv(16))
             except socket.timeout:
                 continue
             if not response:
