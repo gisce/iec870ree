@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
 import bitstring
 import struct
 import datetime
 from collections import namedtuple
+
+from six import with_metaclass
 
 
 __all__ = [
@@ -49,7 +52,7 @@ class AppAsduRegistry(type):
         AppAsduRegistry.types[cls.type] = cls
 
 
-class BaseAppAsdu(metaclass=AppAsduRegistry):
+class BaseAppAsdu(with_metaclass(AppAsduRegistry)):
 
     data_length = 0
     type = 0
@@ -469,7 +472,7 @@ class TimeA():
         self.RES2 = 0  # BS1
 
     def from_hex(self, data):
-        reversed_bytes = bitstring.BitArray(bytes(reversed(data)))
+        reversed_bytes = bitstring.BitArray(bytearray(reversed(data)))
         reversed_bits = bitstring.BitStream(reversed(reversed_bytes))
         self.minute = bitstring.BitArray(reversed(reversed_bits.read(6))).uint
         self.TIS = reversed_bits.read(1).uint
@@ -489,31 +492,31 @@ class TimeA():
 
     def to_bytes(self):
         response = bitstring.BitArray()
-        thedata = bitstring.BitArray(bytes([self.minute]))
+        thedata = bitstring.BitArray(bytearray([self.minute]))
         response = response + thedata[-1:-7:-1]
-        thedata = bitstring.BitArray(bytes([self.TIS]))
+        thedata = bitstring.BitArray(bytearray([self.TIS]))
         response = response + thedata[-1:]
-        thedata = bitstring.BitArray(bytes([self.IV]))
+        thedata = bitstring.BitArray(bytearray([self.IV]))
         response = response + thedata[-1:]
-        thedata = bitstring.BitArray(bytes([self.hour]))
+        thedata = bitstring.BitArray(bytearray([self.hour]))
         response = response + thedata[-1:-6:-1]
-        thedata = bitstring.BitArray(bytes([self.RES1]))
+        thedata = bitstring.BitArray(bytearray([self.RES1]))
         response = response + thedata[-1:-3:-1]
-        thedata = bitstring.BitArray(bytes([self.SU]))
+        thedata = bitstring.BitArray(bytearray([self.SU]))
         response = response + thedata[-1:]
-        thedata = bitstring.BitArray(bytes([self.dayofmonth]))
+        thedata = bitstring.BitArray(bytearray([self.dayofmonth]))
         response = response + thedata[-1:-6:-1]
-        thedata = bitstring.BitArray(bytes([self.dayofweek]))
+        thedata = bitstring.BitArray(bytearray([self.dayofweek]))
         response = response + thedata[-1:-4:-1]
-        thedata = bitstring.BitArray(bytes([self.month]))
+        thedata = bitstring.BitArray(bytearray([self.month]))
         response = response + thedata[-1:-5:-1]
-        thedata = bitstring.BitArray(bytes([self.ETI]))
+        thedata = bitstring.BitArray(bytearray([self.ETI]))
         response = response + thedata[-1:-3:-1]
-        thedata = bitstring.BitArray(bytes([self.PTI]))
+        thedata = bitstring.BitArray(bytearray([self.PTI]))
         response = response + thedata[-1:-3:-1]
-        thedata = bitstring.BitArray(bytes([self.year]))
+        thedata = bitstring.BitArray(bytearray([self.year]))
         response = response + thedata[-1:-8:-1]
-        thedata = bitstring.BitArray(bytes([self.RES2]))
+        thedata = bitstring.BitArray(bytearray([self.RES2]))
         response = response + thedata[-1:]
         response = response[::-1]
         inbytes = response.tobytes()[::-1]

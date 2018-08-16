@@ -7,6 +7,9 @@ import traceback
 from .app_asdu import *
 import math
 
+from six import with_metaclass
+
+
 logger = logging.getLogger('reeprotocol')
 
 
@@ -49,7 +52,7 @@ class IntegrationPeriodNotAvailable(Exception):
 class RequestedASDUTypeNotAvailable(Exception):
     pass
 
-class AppLayer(metaclass=ABCMeta):
+class AppLayer(with_metaclass(ABCMeta)):
 
     def initialize(self, link_layer):
         self.link_layer = link_layer
@@ -235,7 +238,7 @@ class AppLayer(metaclass=ABCMeta):
         return asdu
 
 
-class LinkLayer(metaclass=ABCMeta):
+class LinkLayer(with_metaclass(ABCMeta)):
 
     def __init__(self, der=None, dir_pm=None):
         self.der = der
@@ -302,7 +305,7 @@ class LinkLayer(metaclass=ABCMeta):
         return self._fcb
 
 
-class PhysicalLayer(metaclass=ABCMeta):
+class PhysicalLayer(with_metaclass(ABCMeta)):
 
     @abstractmethod
     def connect(self):

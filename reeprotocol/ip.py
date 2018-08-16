@@ -3,7 +3,11 @@
 from __future__ import absolute_import
 import logging
 import socket
-import queue
+import six
+if six.PY2:
+    import Queue as queue
+else:
+    import queue
 import threading
 import binascii
 from .protocol import PhysicalLayer
@@ -55,7 +59,7 @@ class Ip(PhysicalLayer):
         logger.debug("Start reading port for %s", self.addr)
         while self.alive.is_set():
             try:
-                response = self.connection.recv(16)
+                response = bytearray(self.connection.recv(16))
             except socket.timeout:
                 continue
             if not response:
