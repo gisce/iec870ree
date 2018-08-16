@@ -32,12 +32,16 @@ def run_example(ip, port, der, dir_pm, clave_pm):
                                     datetime.datetime(2017, 11, 1, 0, 0)):
             logging.info("read response {}".format(resp))
         """
+        resp = app_layer.get_info()
+        logging.info("read response {}".format(resp))
+        resp = app_layer.read_datetime()
+        logging.info("read response {}".format(resp))
         for resp in app_layer.get_info():
             logging.info("read response {}".format(resp))
     except Exception:
         raise
     finally:
-        #app_layer.finish_session()
+        app_layer.finish_session()
         physical_layer.disconnect()
         sys.exit(1)
 
