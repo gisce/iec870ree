@@ -2,7 +2,11 @@ reeprotocol
 ###########
 
 .. image:: https://travis-ci.com/gisce/reeprotocol.svg?branch=gisce
-    :target: https://travis-ci.com/gisce/reeprotocol
+    :target: https://travis-ci.com/gisce/reeprotocol   
+
+.. image:: https://coveralls.io/repos/github/gisce/reeprotocol/badge.svg?branch=python_27_35
+    :target: https://coveralls.io/github/gisce/reeprotocol?branch=python_27_35
+
 	     
 
 IEC-870-5-102 for REE Spanish Electric meters
