@@ -145,7 +145,7 @@ class C_AC_NA_2(BaseAppAsdu):
     used to send the password of the thing
     """
     type = 183
-    data_length = 0x04
+    data_length = 0x06
 
     def __init__(self, clave=0):
         self.clave = clave
@@ -155,6 +155,10 @@ class C_AC_NA_2(BaseAppAsdu):
 
     def to_bytes(self):
         return struct.pack("I", self.clave)
+
+    @property
+    def length(self):
+        return 0x0d
 
 
 class C_FS_NA_2(BaseAppAsdu):
