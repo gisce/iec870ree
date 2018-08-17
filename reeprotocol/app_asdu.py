@@ -22,7 +22,8 @@ __all__ = [
     'C_TA_VM_2',
     'C_CB_UN_2',
     'M_TA_VC_2',
-    'M_TA_VM_2'
+    'M_TA_VM_2',
+    'M_IB_TK_2'
 ]
 
 BillingRegister = namedtuple('BillingRegister', ['address', 'active_abs',
