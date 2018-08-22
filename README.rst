@@ -37,7 +37,7 @@ Implemented ASDUs
 - C_AC_NA_2: Authentication (Already implemented on origin)
 - C_CI_NU_2: Read integrated totals **incremental** values (Already implemented on origin)
 - M_IT_TK_2: Answer to C_CI_NU_2 (Already implemented on origin)
-- C_CI_NT_2: Read integrated totals **absolut** values
+- C_CI_NT_2: Read integrated totals **absolute** values
 - M_IT_TG_2: Answer to C_CI_NT_2
 - C_FS_NA_2: Finish session (Already implemented on origin)
 - C_TI_NA_2: Read current date and time
@@ -54,4 +54,4 @@ Implemented ASDUs
 History of this project
 -----------------------
 
-Initial project was writen by `Javier de la Puente <https://github.com/javierdelapuente>`_ and was called `reeprotocol <https://github.com/javierdelapuente/reeprotocol>`_ then `GISCE-TI <https://gisce.net>`_ started working on it and implemented `Ip Layer <https://github.com/javierdelapuente/reeprotocol/pull/1>`_, `base changes <https://github.com/javierdelapuente/reeprotocol/pull/8>`_ and `new ASDUs <https://github.com/javierdelapuente/reeprotocol/pull/9>`_. Then we put this library in production :rocket:! Our working speed was different from the main repo pace so we started a new project forked from the original. You can see the `issue with the history <https://github.com/javierdelapuente/reeprotocol/issues/10>`_
+Initial project was writen by `Javier de la Puente <https://github.com/javierdelapuente>`_ and was called `reeprotocol <https://github.com/javierdelapuente/reeprotocol>`_ . Then `GISCE-TI <https://gisce.net>`_ started working on it and implemented `Ip Layer <https://github.com/javierdelapuente/reeprotocol/pull/1>`_, `base changes <https://github.com/javierdelapuente/reeprotocol/pull/8>`_ and `new ASDUs <https://github.com/javierdelapuente/reeprotocol/pull/9>`_. With that we put this library in production :rocket:! Our working speed was different from the main repo pace so we started a new project forked from the original. You can see the issue with the history `here <https://github.com/javierdelapuente/reeprotocol/issues/10>`_.
