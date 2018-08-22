@@ -54,4 +54,12 @@ Implemented ASDUs
 History of this project
 -----------------------
 
-Initial project was writen by `Javier de la Puente <https://github.com/javierdelapuente>`_ and was called `reeprotocol <https://github.com/javierdelapuente/reeprotocol>`_ . Then `GISCE-TI <https://gisce.net>`_ started working on it and implemented `Ip Layer <https://github.com/javierdelapuente/reeprotocol/pull/1>`_, `base changes <https://github.com/javierdelapuente/reeprotocol/pull/8>`_ and `new ASDUs <https://github.com/javierdelapuente/reeprotocol/pull/9>`_. With that we put this library in production :rocket:! Our working speed was different from the main repo pace so we started a new project forked from the original. You can see the issue with the history `here <https://github.com/javierdelapuente/reeprotocol/issues/10>`_.
+Initial project was writen by `Javier de la Puente <https://github.com/javierdelapuente>`_
+and was called `reeprotocol <https://github.com/javierdelapuente/reeprotocol>`_ .
+Then `GISCE-TI <https://gisce.net>`_ started working on it and implemented
+`Ip Layer <https://github.com/javierdelapuente/reeprotocol/pull/1>`_,
+`base changes <https://github.com/javierdelapuente/reeprotocol/pull/8>`_
+and `new ASDUs <https://github.com/javierdelapuente/reeprotocol/pull/9>`_.
+With that we put this library in production 🚀! Our working speed was different
+from the main repo pace so we started a new project forked from the original.
+You can see the issue with the history `here <https://github.com/javierdelapuente/reeprotocol/issues/10>`_.
