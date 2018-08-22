@@ -34,24 +34,24 @@ Configuration of devices:
 Implemented ASDUs 
 -----------------
 
-- C_AC_NA_2: Autentificación
-- C_CI_NU_2:  Leer incrementales absolutos
-- M_IT_TG_2: Respuesta  Leer incrementales absolutos
-- C_CI_NT_2: Leer totales absolutos
-- M_IT_TK_2: Respuesta de C_CI_NT_2
-- C_FS_NA_2: Finalizar sesión
-- C_TI_NA_2:  Leer fecha y hora actuales
-- M_TI_TA_2: Respuesta Fecha y hora actuales
-- C_RD_NA_2: Leer identificador de fabricante y equipo
-- P_MP_NA_2: Respuesta Identificador del fabricante y equipo
-- C_TA_VC_2: Leer Información de Tarificación (Valores en Curso)
-- M_TA_VC_2: Respuesta Información de Tarificación (Valores en Curso)
-- C_TA_VM_2: Leer Información de Tarificación (Valores Memorizados)
-- M_TA_VM_2: Respuesta Información de Tarificación (Valores Memorizados)
-- C_CB_UN_2 (opcional): Similar a C_CI_NU_2 y C_CI_NT_2
-- M_IB_TK_2: Respuesta de C_CB_UN_2
+- C_AC_NA_2: Authentication (Already implemented on origin)
+- C_CI_NU_2: Read integrated totals **incremental** values (Already implemented on origin)
+- M_IT_TK_2: Answer to C_CI_NU_2 (Already implemented on origin)
+- C_CI_NT_2: Read integrated totals **absolut** values
+- M_IT_TG_2: Answer to C_CI_NT_2
+- C_FS_NA_2: Finish session (Already implemented on origin)
+- C_TI_NA_2: Read current date and time
+- M_TI_TA_2: Answer to C_TI_NA_2
+- C_RD_NA_2: Read manufacturer and device identifiers
+- P_MP_NA_2: Answer to C_RD_NA_2
+- C_TA_VC_2: Read metering information **Current values**
+- M_TA_VC_2: Answer to C_TA_VC_2
+- C_TA_VM_2: Read metering information **Saved values**
+- M_TA_VM_2: Answer to C_TA_VM_2
+- C_CB_UN_2: (optional) Read integrated totals **incremental** values. With blocks choices. Similar to C_CI_NU_2.
+- M_IB_TK_2: Answer to C_CB_UN_2
 
 History of this project
 -----------------------
 
-Initial project was writed by `Javier de la Puente <https://github.com/javierdelapuente>`_ and was called `reeprotocol <https://github.com/javierdelapuente/reeprotocol>`_ then at `GISCE-TI <https://gisce.net>`_ started working on it and implement `Ip Layer <https://github.com/javierdelapuente/reeprotocol/pull/1>`_, `base changes <https://github.com/javierdelapuente/reeprotocol/pull/8>`_ and `new ASDUs <https://github.com/javierdelapuente/reeprotocol/pull/9>`_. And we put this library in production :rocket:! and our speed was different of the main repo. Then we start a new project forked from the original. You can see the `issue with the history <https://github.com/javierdelapuente/reeprotocol/issues/10>`_
+Initial project was writen by `Javier de la Puente <https://github.com/javierdelapuente>`_ and was called `reeprotocol <https://github.com/javierdelapuente/reeprotocol>`_ then `GISCE-TI <https://gisce.net>`_ started working on it and implemented `Ip Layer <https://github.com/javierdelapuente/reeprotocol/pull/1>`_, `base changes <https://github.com/javierdelapuente/reeprotocol/pull/8>`_ and `new ASDUs <https://github.com/javierdelapuente/reeprotocol/pull/9>`_. Then we put this library in production :rocket:! Our working speed was different from the main repo pace so we started a new project forked from the original. You can see the `issue with the history <https://github.com/javierdelapuente/reeprotocol/issues/10>`_
