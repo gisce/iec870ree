@@ -1,6 +1,6 @@
 from . import context
 import unittest
-from reeprotocol import protocol, base_asdu
+from iec870ree import protocol, base_asdu
 
 class TestProtocol(unittest.TestCase):
     pass

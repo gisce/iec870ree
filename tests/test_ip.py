@@ -6,7 +6,7 @@ else:
     from unittest.mock import patch, Mock, MagicMock
 import logging
 
-from reeprotocol.ip import Ip
+from iec870ree.ip import Ip
 
 
 class TestIp(unittest.TestCase):

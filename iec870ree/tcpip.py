@@ -5,7 +5,7 @@ import time
 import logging
 import socket
 
-logger = logging.getLogger('reeprotocol.tcpip')
+logger = logging.getLogger('iec870ree.tcpip')
 
 class TcpIp(PhysicalLayer):
 

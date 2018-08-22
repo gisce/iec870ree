@@ -9,7 +9,7 @@ import serial
 import time
 import logging
 
-logger = logging.getLogger('reeprotocol.modem')
+logger = logging.getLogger('iec870ree.modem')
 
 class ModemException(Exception):
     pass

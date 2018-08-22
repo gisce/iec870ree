@@ -6,19 +6,19 @@ sys.path.append(library_path)
 
 import getopt
 import logging
-import reeprotocol
-import reeprotocol.tcpip
-import reeprotocol.protocol
+import iec870ree
+import iec870ree.tcpip
+import iec870ree.protocol
 import datetime
 
 def run_example(ip, port, der, dir_pm, clave_pm):
     end_date = datetime.datetime.now()
     start_date = end_date - datetime.timedelta(days = 2)
     
-    physical_layer = reeprotocol.tcpip.TcpIp(ip, port)
-    link_layer = reeprotocol.protocol.LinkLayer(der, dir_pm)
+    physical_layer = iec870ree.tcpip.TcpIp(ip, port)
+    link_layer = iec870ree.protocol.LinkLayer(der, dir_pm)
     link_layer.initialize(physical_layer)
-    app_layer = reeprotocol.protocol.AppLayer()
+    app_layer = iec870ree.protocol.AppLayer()
     app_layer.initialize(link_layer)
 
     physical_layer.connect()
