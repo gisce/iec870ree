@@ -1,6 +1,6 @@
 from . import context
 import unittest
-from reeprotocol import modem
+from iec870ree import modem
 import six
 if six.PY2:
     from mock import patch, MagicMock

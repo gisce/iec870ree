@@ -10,7 +10,7 @@ import math
 from six import with_metaclass
 
 
-logger = logging.getLogger('reeprotocol')
+logger = logging.getLogger('iec870ree')
 
 
 CONTRACTS_REGISTERS = {

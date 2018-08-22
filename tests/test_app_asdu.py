@@ -1,8 +1,8 @@
 from . import context
 import unittest
 import datetime
-from reeprotocol import app_asdu
-from reeprotocol.app_asdu import IntegratedTotals, BillingRegister
+from iec870ree import app_asdu
+from iec870ree.app_asdu import IntegratedTotals, BillingRegister
 
 import logging
 logging.basicConfig(level=logging.DEBUG)

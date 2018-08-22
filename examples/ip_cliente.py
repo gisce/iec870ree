@@ -6,17 +6,17 @@ sys.path.append(library_path)
 
 import getopt
 import logging
-import reeprotocol.ip
-import reeprotocol.protocol
+import iec870ree.ip
+import iec870ree.protocol
 import datetime
 
 
 def run_example(ip, port, der, dir_pm, clave_pm):
     try:
-        physical_layer = reeprotocol.ip.Ip((ip, port))
-        link_layer = reeprotocol.protocol.LinkLayer(der, dir_pm)
+        physical_layer = iec870ree.ip.Ip((ip, port))
+        link_layer = iec870ree.protocol.LinkLayer(der, dir_pm)
         link_layer.initialize(physical_layer)
-        app_layer = reeprotocol.protocol.AppLayer()
+        app_layer = iec870ree.protocol.AppLayer()
         app_layer.initialize(link_layer)
 
         physical_layer.connect()
