@@ -15,7 +15,7 @@ with open('README.rst') as f:
 
 setup(
     name="iec870ree",
-    version="0.1.v0",
+    version="0.1.0",
     author="GISCE-TI, S.L.",
     author_email="devel@gisce.net",
     description=("Library to connect and query information about electric"
@@ -30,9 +30,9 @@ setup(
     packages=find_packages(exclude=('tests', 'docs', 'examples')),
     classifiers=[
         "Development Status :: 4 - Beta",
-        "Topic :: Communications :: FIDO :: IEC 870-5-102",
         "License :: OSI Approved :: GNU Affero General Public License v3",
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.5"
+        "Programming Language :: Python :: 3.5",
+        "Topic :: Utilities"
     ],
 )
