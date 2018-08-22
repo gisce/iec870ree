@@ -1,5 +1,5 @@
-reeprotocol
-###########
+iec870ree
+=========
 
 .. image:: https://travis-ci.com/gisce/iec870ree.svg?branch=master
     :target: https://travis-ci.com/gisce/iec870ree   
@@ -11,21 +11,47 @@ reeprotocol
 
 IEC-870-5-102 for REE Spanish Electric meters
 
-Based on http://www.ree.es/sites/default/files/01_ACTIVIDADES/Documentos/Documentacion-Simel/protoc_RMCM10042002.pdf
-and http://www.ree.es/sites/default/files/01_ACTIVIDADES/Documentos/Documentacion-Simel/AMPLIACION%20DEL%20PROTOCOLO%20Fase%202%202003-02-10.pdf
+Documentation about this protocol:
+
+- `Initial definition <http://www.ree.es/sites/default/files/01_ACTIVIDADES/Documentos/Documentacion-Simel/protoc_RMCM10042002.pdf>`_
+- `Extension <http://www.ree.es/sites/default/files/01_ACTIVIDADES/Documentos/Documentacion-Simel/AMPLIACION%20DEL%20PROTOCOLO%20Fase%202%202003-02-10.pdf>`_
 
 
 Installation
-============
+------------
 
-Just checkout the code, install the requirements and launch the examples with real information from devices.
+.. code-block::
 
-To use the modem interface you will need a gsm modem. Have a look at http://www.ree.es/sites/default/files/01_ACTIVIDADES/Documentos/Documentacion-Simel/Simel_gsm_v1.0.pdf for more information.
+    $ pip install iec870ree
 
 
-Functions Implemented
-=====================
+Configuration of devices:
 
-At the moment this project is Work In Progress. I am not sure of all the aspects of the protocol, so I am writing/testing the libraries against real devices. So for now do not except this project to be anything more than a spike/prototype.
+- `GSM <http://www.ree.es/sites/default/files/01_ACTIVIDADES/Documentos/Documentacion-Simel/Simel_gsm_v1.0.pdf>`_
+- `RTC <http://www.ree.es/sites/default/files/01_ACTIVIDADES/Documentos/Documentacion-Simel/Simel_rtc_v1.0.pdf>`_
 
-However at 20180613, there are working examples to read hourly data from meters both with tcpip and with a gsm connection.  
+
+Implemented ASDUs 
+-----------------
+
+- C_AC_NA_2: Authentication (Already implemented on origin)
+- C_CI_NU_2: Read integrated totals **incremental** values (Already implemented on origin)
+- M_IT_TK_2: Answer to C_CI_NU_2 (Already implemented on origin)
+- C_CI_NT_2: Read integrated totals **absolute** values
+- M_IT_TG_2: Answer to C_CI_NT_2
+- C_FS_NA_2: Finish session (Already implemented on origin)
+- C_TI_NA_2: Read current date and time
+- M_TI_TA_2: Answer to C_TI_NA_2
+- C_RD_NA_2: Read manufacturer and device identifiers
+- P_MP_NA_2: Answer to C_RD_NA_2
+- C_TA_VC_2: Read metering information **Current values**
+- M_TA_VC_2: Answer to C_TA_VC_2
+- C_TA_VM_2: Read metering information **Saved values**
+- M_TA_VM_2: Answer to C_TA_VM_2
+- C_CB_UN_2: (optional) Read integrated totals **incremental** values. With blocks choices. Similar to C_CI_NU_2.
+- M_IB_TK_2: Answer to C_CB_UN_2
+
+History of this project
+-----------------------
+
+Initial project was writen by `Javier de la Puente <https://github.com/javierdelapuente>`_ and was called `reeprotocol <https://github.com/javierdelapuente/reeprotocol>`_ . Then `GISCE-TI <https://gisce.net>`_ started working on it and implemented `Ip Layer <https://github.com/javierdelapuente/reeprotocol/pull/1>`_, `base changes <https://github.com/javierdelapuente/reeprotocol/pull/8>`_ and `new ASDUs <https://github.com/javierdelapuente/reeprotocol/pull/9>`_. With that we put this library in production :rocket:! Our working speed was different from the main repo pace so we started a new project forked from the original. You can see the issue with the history `here <https://github.com/javierdelapuente/reeprotocol/issues/10>`_.
