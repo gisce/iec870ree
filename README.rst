@@ -1,11 +1,11 @@
 reeprotocol
 ###########
 
-.. image:: https://travis-ci.com/gisce/reeprotocol.svg?branch=gisce
-    :target: https://travis-ci.com/gisce/reeprotocol   
+.. image:: https://travis-ci.com/gisce/iec870ree.svg?branch=master
+    :target: https://travis-ci.com/gisce/iec870ree   
 
-.. image:: https://coveralls.io/repos/github/gisce/reeprotocol/badge.svg?branch=python_27_35
-    :target: https://coveralls.io/github/gisce/reeprotocol?branch=python_27_35
+.. image:: https://coveralls.io/repos/github/gisce/iec870ree/badge.svg?branch=master
+    :target: https://coveralls.io/github/gisce/iec870ree?branch=master
 
 	     
 
