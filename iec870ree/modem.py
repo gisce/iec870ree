@@ -69,7 +69,7 @@ class Modem(PhysicalLayer):
         time.sleep(1)
 
     def waitforconnect(self):
-        max_tries = 40
+        max_tries = 20
         for i in range(max_tries):
             try:
                 i = self.queue.get(False, 1)

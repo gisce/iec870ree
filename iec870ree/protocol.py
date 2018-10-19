@@ -46,13 +46,16 @@ def parse_asdu(trama):
 class ProtocolException(Exception):
     pass
 
+
 class IntegrationPeriodNotAvailable(Exception):
     pass
+
 
 class RequestedASDUTypeNotAvailable(Exception):
     pass
 
-class AppLayer(with_metaclass(ABCMeta)):
+
+class AppLayer(metaclass=ABCMeta):
 
     def initialize(self, link_layer):
         self.link_layer = link_layer
@@ -238,7 +241,7 @@ class AppLayer(with_metaclass(ABCMeta)):
         return asdu
 
 
-class LinkLayer(with_metaclass(ABCMeta)):
+class LinkLayer(metaclass=ABCMeta):
 
     def __init__(self, der=None, dir_pm=None):
         self.der = der
@@ -305,7 +308,7 @@ class LinkLayer(with_metaclass(ABCMeta)):
         return self._fcb
 
 
-class PhysicalLayer(with_metaclass(ABCMeta)):
+class PhysicalLayer(metaclass=ABCMeta):
 
     @abstractmethod
     def connect(self):

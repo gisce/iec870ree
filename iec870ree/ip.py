@@ -4,10 +4,7 @@ from __future__ import absolute_import
 import logging
 import socket
 import six
-if six.PY2:
-    import Queue as queue
-else:
-    import queue
+import queue
 import threading
 import binascii
 from .protocol import PhysicalLayer
@@ -26,7 +23,6 @@ class Ip(PhysicalLayer):
         self.addr = addr
         self.connection = None
         self.connected = False
-        self.alive = threading.Event()
         self.queue = queue.Queue()
         self.thread = threading.Thread(target=self.read_port)
         logger.debug("New IP with addr %s", addr)
@@ -36,32 +32,24 @@ class Ip(PhysicalLayer):
         """
         self.connection = socket.create_connection(self.addr)
         self.connection.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        self.connection.settimeout(1)
         self.connected = True
-        self.alive.set()
         self.thread.start()
         logger.debug("Connection with %s created", self.addr)
 
     def disconnect(self):
         """Disconnects
         """
-        self.connected = False
-        self.alive.clear()
-        logger.debug("Disconnected from %s", self.addr)
-        self.thread.join()
-        logger.debug("Thread joined..")
         if self.connection:
             self.connection.close()
+        self.connected = False
+        logger.debug("Disconnected from %s", self.addr)
 
     def read_port(self):
         """Read bytes from socket
         """
         logger.debug("Start reading port for %s", self.addr)
-        while self.alive.is_set():
-            try:
-                response = bytearray(self.connection.recv(16))
-            except socket.timeout:
-                continue
+        while self.connected:
+            response = self.connection.recv(16)
             if not response:
                 continue
             logger.debug(
@@ -87,5 +75,5 @@ class Ip(PhysicalLayer):
 
     def get_byte(self, timeout=60):
         """Read a byte"""
-        logger.debug("Getting byte. waiting {}".format(timeout))
-        return self.queue.get(True, timeout=timeout)
+        logger.debug("Getting byte")
+        return self.queue.get(True, timeout=60)
