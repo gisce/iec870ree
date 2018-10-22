@@ -3,7 +3,6 @@ from abc import ABCMeta, abstractmethod
 from .base_asdu import (
     AsduParser, FixedAsdu, VariableAsdu
 )
-import traceback
 from .app_asdu import *
 import math
 
@@ -46,11 +45,14 @@ def parse_asdu(trama):
 class ProtocolException(Exception):
     pass
 
+
 class IntegrationPeriodNotAvailable(Exception):
     pass
 
+
 class RequestedASDUTypeNotAvailable(Exception):
     pass
+
 
 class AppLayer(with_metaclass(ABCMeta)):
 
