@@ -1,11 +1,19 @@
 language: python
 python:
-  - "3.5"
-  - "2.7"
+- '3.5'
+- '2.7'
 install:
-  - pip install -e .
-  - pip install coveralls
-# command to run tests
+- pip install -e .
+- pip install coveralls
 script: python setup.py test
 after_success:
-  - coveralls
+- coveralls
+deploy:
+  provider: pypi
+  user: gisce
+  password:
+    secure: RExCAd3EaoJKsTte3pLDWBDsBYkNITMPa3I7F9tiZBx5DYAdOTk4lS+aVu/FbqQNQ321HlNus7hWZ1JzeeRCf5uyt+wmQhCt7B7+43XI1HJT2JVZHdg5IkI6FQcmAafAmECBMSY9GoikSSVV5dsxZDWGe7AbRsq3GVWKpgMqf/oEKzSoBPtzY13eEk7wsyFpsJlWvn+uYR397XkztrBhLKWEeX/CaaI37IflnDiSmBUAZNAixG/79pMAsEf9rwWyp+vbd+0+z7J777DCWRuQL4XdVUcTGmZYIV8oF7kQQsDgeqa3gcyzOJXE1RaAMB/bJJ23YIG2hhsWLMozrxmGek/V597rQmj49BCirFGlgsknwcY9BUCc1c4QJyHnlh08AFQIOCrCWPatLobO26Xy2e+j1lCLWrCK84fU5E1SjS6C7LdKVpVtVlDDntJq2dE5946IoCP8nXWA+kDbfnGbjhTodJueBf0Pq/nTWDWz7LO7VlZL0k3mJWzeHkhh6XlxMYxe8hveUlrqjxixSczdwfW9olUws+Hn/Jk1HO5uWqc4BtCXjw4AJHi98NJYEUEpFz0Lx807MHXPlZ5Z7tkq2jLJv/EJuP1RPMk+fqSSJpcbJRU+cpBykJqIsZBOiZ5sw5axmUPhcM7SZcGtpzAr26je/Qy6u1Sn/6j4Tgcrvx8=
+  on:
+    tags: true
+    distributions: sdist bdist_wheel
+    repo: gisce/iec870ree
