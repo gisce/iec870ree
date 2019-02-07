@@ -289,10 +289,16 @@ class LinkLayer(with_metaclass(ABCMeta)):
         asdu.generate()
         return asdu
 
-    def remote_link_reposition(self):
+    def remote_link_reposition(self, retries=None):
+        resp = None
         asdu = self.create_remote_link_reposition_asdu()
         self.send_frame(asdu)
-        resp = self.get_frame()
+        try:
+            resp = self.get_frame()
+        except Exception as e:
+            if retries:
+                retries -= 1
+                self.remote_link_reposition(retries=retries)
         # CHECK IT IS AN ACK?
         if resp is None:
             raise ProtocolException("no answer received. maybe wrong der??")
