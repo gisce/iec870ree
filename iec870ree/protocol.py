@@ -21,7 +21,8 @@ CONTRACTS_REGISTERS = {
 
 READINGS_REGISTERS = {
     'profiles': 11,
-    'daily_billings': 21
+    'daily_billings': 21,
+    'quarter_hour': 12,
 }
 
 
