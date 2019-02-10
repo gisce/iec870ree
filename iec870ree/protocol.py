@@ -258,16 +258,23 @@ class LinkLayer(with_metaclass(ABCMeta)):
 
     def get_frame(self, timeout=60):
         frame = None
+        logger.info("receiving frame")
         while not frame:
             bt = self.physical_layer.get_byte(timeout)
             frame = self.asdu_parser.append_and_get_if_completed(bt)
-        logger.info("receiving frame {}".format(frame))
+        logger.info("received frame {}".format(frame))
         return frame
 
-    def link_state_request(self):
+    def link_state_request(self, retries=None):
+        resp = None
         asdu = self.create_link_state_asdu()
         self.send_frame(asdu)
-        resp = self.get_frame()
+        try:
+            resp = self.get_frame()
+        except Exception as e:
+            if retries:
+                retries -= 1
+                self.link_state_request(retries=retries)
         if resp is None:
             raise ProtocolException("Link state request didn't get response")
 
@@ -282,10 +289,16 @@ class LinkLayer(with_metaclass(ABCMeta)):
         asdu.generate()
         return asdu
 
-    def remote_link_reposition(self):
+    def remote_link_reposition(self, retries=None):
+        resp = None
         asdu = self.create_remote_link_reposition_asdu()
         self.send_frame(asdu)
-        resp = self.get_frame()
+        try:
+            resp = self.get_frame()
+        except Exception as e:
+            if retries:
+                retries -= 1
+                self.remote_link_reposition(retries=retries)
         # CHECK IT IS AN ACK?
         if resp is None:
             raise ProtocolException("no answer received. maybe wrong der??")
