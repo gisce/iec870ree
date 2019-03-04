@@ -21,7 +21,7 @@ setup(
     description=("Library to connect and query information about electric"
                  "meters following REE protocol."),
     long_description=readme,
-    long_description_content_type="text/rst",
+    long_description_content_type="text/x-rst",
     url="https://github.com/gisce/iec870ree",
     license="GNU Affero General Public License v3",
     install_requires=INSTALL_REQUIRES,
