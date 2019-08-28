@@ -451,7 +451,7 @@ class M_IB_TK_2(BaseAppAsdu):
                     position += 5
 
 
-class TimeA():
+class TimeBase():
 
     def __init__(self, fecha=datetime.datetime.now()):
         self.minute = fecha.minute  # UI6
@@ -475,6 +475,41 @@ class TimeA():
         self.year = fecha.year % 100  # UI7
         self.RES2 = 0  # BS1
 
+        # time B
+        self.seconds = fecha.second
+        self.microseconds = fecha.microsecond
+
+    @property
+    def datetime(self):
+        year = self.year + 2000
+        return datetime.datetime(
+            year, self.month, self.dayofmonth, self.hour, self.minute,
+            self.seconds, self.microseconds)
+
+    def __repr__(self):
+        # output = "  -- TiempoA Begin -- \n"
+        # output += "    minute: " + str(self.minute) + "\n"
+        # output += "    TIS: " + str(self.TIS) + "\n"
+        # output += "    IV: " + str(self.IV) + "\n"
+        # output += "    hour: " + str(self.hour) + "\n"
+        # output += "    RES1: " + str(self.RES1) + "\n"
+        # output += "    SU: " + str(self.SU) + "\n"
+        # output += "    dayofmonth: " + str(self.dayofmonth) + "\n"
+        # output += "    dayofweek: " + str(self.dayofweek) + "\n"
+        # output += "    month: " + str(self.month) + "\n"
+        # output += "    ETI: " + str(self.ETI) + "\n"
+        # output += "    PTI: " + str(self.PTI) + "\n"
+        # output += "    year: " + str(self.year) + "\n"
+        # output += ("    content: "
+        #            + (":".join("%02x" % b for b in self.to_bytes())) + "\n")
+        # output += "    datetime: " + str(self.datetime) + "\n"
+        # output += "  -- TiempoA End \n"
+        # return output
+        return str(self.datetime)
+
+
+class TimeA(TimeBase):
+
     def from_hex(self, data):
         reversed_bytes = bitstring.BitArray(bytearray(reversed(data)))
         reversed_bits = bitstring.BitStream(reversed(reversed_bytes))
@@ -493,6 +528,9 @@ class TimeA():
         self.PTI = bitstring.BitArray(reversed(reversed_bits.read(2))).uint
         self.year = bitstring.BitArray(reversed(reversed_bits.read(7))).uint
         self.RES2 = reversed_bits.read(1).uint
+
+        self.seconds = 0
+        self.microseconds = 0
 
     def to_bytes(self):
         response = bitstring.BitArray()
@@ -526,29 +564,66 @@ class TimeA():
         inbytes = response.tobytes()[::-1]
         return inbytes
 
-    @property
-    def datetime(self):
-        year = self.year+2000
-        return datetime.datetime(year, self.month, self.dayofmonth,
-                                 self.hour, self.minute)
 
-    def __repr__(self):
-        # output = "  -- TiempoA Begin -- \n"
-        # output += "    minute: " + str(self.minute) + "\n"
-        # output += "    TIS: " + str(self.TIS) + "\n"
-        # output += "    IV: " + str(self.IV) + "\n"
-        # output += "    hour: " + str(self.hour) + "\n"
-        # output += "    RES1: " + str(self.RES1) + "\n"
-        # output += "    SU: " + str(self.SU) + "\n"
-        # output += "    dayofmonth: " + str(self.dayofmonth) + "\n"
-        # output += "    dayofweek: " + str(self.dayofweek) + "\n"
-        # output += "    month: " + str(self.month) + "\n"
-        # output += "    ETI: " + str(self.ETI) + "\n"
-        # output += "    PTI: " + str(self.PTI) + "\n"
-        # output += "    year: " + str(self.year) + "\n"
-        # output += ("    content: "
-        #            + (":".join("%02x" % b for b in self.to_bytes())) + "\n")
-        # output += "    datetime: " + str(self.datetime) + "\n"
-        # output += "  -- TiempoA End \n"
-        # return output
-        return str(self.datetime)
+class TimeB(TimeBase):
+
+    def from_hex(self, data):
+        reversed_bytes = bitstring.BitArray(bytearray(reversed(data)))
+        reversed_bits = bitstring.BitStream(reversed(reversed_bytes))
+
+        milliseconds = bitstring.BitArray(reversed(reversed_bits.read(10))).uint
+        self.microseconds = milliseconds * 1000
+        self.seconds = bitstring.BitArray(reversed(reversed_bits.read(6))).uint
+        self.minute = bitstring.BitArray(reversed(reversed_bits.read(6))).uint
+        self.TIS = reversed_bits.read(1).uint
+        self.IV = reversed_bits.read(1).uint
+        self.hour = bitstring.BitArray(reversed(reversed_bits.read(5))).uint
+        self.RES1 = bitstring.BitArray(reversed(reversed_bits.read(2))).uint
+        self.SU = reversed_bits.read(1).uint
+        self.dayofmonth = bitstring.BitArray(reversed(reversed_bits.read(5))).uint
+        self.dayofweek = bitstring.BitArray(reversed(reversed_bits.read(3))).uint
+        self.month = bitstring.BitArray(reversed(reversed_bits.read(4))).uint
+        self.ETI = bitstring.BitArray(reversed(reversed_bits.read(2))).uint
+        self.PTI = bitstring.BitArray(reversed(reversed_bits.read(2))).uint
+        self.year = bitstring.BitArray(reversed(reversed_bits.read(7))).uint
+        self.RES2 = reversed_bits.read(1).uint
+
+    def to_bytes(self):
+        response = bitstring.BitArray()
+
+        milliseconds = int(self.microseconds / 1000)
+        thedata = bitstring.BitArray(bytearray(
+            [milliseconds >> 8, milliseconds & 0xFF]
+        ))
+        response = response + thedata[-1:-11:-1]
+        thedata = bitstring.BitArray(bytearray([self.seconds]))
+        response = response + thedata[-1:-7:-1]
+        thedata = bitstring.BitArray(bytearray([self.minute]))
+        response = response + thedata[-1:-7:-1]
+        thedata = bitstring.BitArray(bytearray([self.TIS]))
+        response = response + thedata[-1:]
+        thedata = bitstring.BitArray(bytearray([self.IV]))
+        response = response + thedata[-1:]
+        thedata = bitstring.BitArray(bytearray([self.hour]))
+        response = response + thedata[-1:-6:-1]
+        thedata = bitstring.BitArray(bytearray([self.RES1]))
+        response = response + thedata[-1:-3:-1]
+        thedata = bitstring.BitArray(bytearray([self.SU]))
+        response = response + thedata[-1:]
+        thedata = bitstring.BitArray(bytearray([self.dayofmonth]))
+        response = response + thedata[-1:-6:-1]
+        thedata = bitstring.BitArray(bytearray([self.dayofweek]))
+        response = response + thedata[-1:-4:-1]
+        thedata = bitstring.BitArray(bytearray([self.month]))
+        response = response + thedata[-1:-5:-1]
+        thedata = bitstring.BitArray(bytearray([self.ETI]))
+        response = response + thedata[-1:-3:-1]
+        thedata = bitstring.BitArray(bytearray([self.PTI]))
+        response = response + thedata[-1:-3:-1]
+        thedata = bitstring.BitArray(bytearray([self.year]))
+        response = response + thedata[-1:-8:-1]
+        thedata = bitstring.BitArray(bytearray([self.RES2]))
+        response = response + thedata[-1:]
+        response = response[::-1]
+        inbytes = response.tobytes()[::-1]
+        return inbytes
