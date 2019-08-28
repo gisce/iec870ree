@@ -103,7 +103,7 @@ class M_TI_TA_2(BaseAppAsdu):
         self.tiempo = None
 
     def from_hex(self, data, cualificador_ev):
-        self.tiempo = TimeA()
+        self.tiempo = TimeB()
         self.tiempo.from_hex(data)
 
 
