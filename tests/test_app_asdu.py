@@ -38,8 +38,24 @@ class TestAppAsdu(unittest.TestCase):
         print(tiempo)
         self.assertEqual(tiempo.datetime, datetime.datetime(2010,2,7,11,0))
 
+    def test_time_b_from_hex(self):
+        tiempo = app_asdu.TimeB()
+
+        # al voltant del 2019-08-28 11:40
+        tiempo.from_hex(bytearray.fromhex("00 90 25 8b 7c 08 13"))
+        print(tiempo)
+        self.assertEqual(
+            tiempo.datetime, datetime.datetime(2019, 8, 28, 11, 37, 36, 0)
+        )
+
+        tiempo.from_hex(bytearray.fromhex("0a 2a 10 0b e7 02 0a"))
+        print(tiempo)
+        self.assertEqual(
+            tiempo.datetime, datetime.datetime(2010, 2, 7, 11, 16, 10, 522000)
+        )
+
     def test_time_a_to_bytes(self):
-        d = datetime.datetime(2017,1,2,3,4)
+        d = datetime.datetime(2017, 1, 2, 3, 4)
         tiempo = app_asdu.TimeA(d)
         thebytes = tiempo.to_bytes()
 
@@ -47,10 +63,30 @@ class TestAppAsdu(unittest.TestCase):
         tiempo2.from_hex(thebytes)
         self.assertEqual(tiempo2.datetime, d)
 
+    def test_time_b_to_bytes(self):
+        d = datetime.datetime(2017, 1, 2, 3, 4, 5, 678000)
+        tiempo = app_asdu.TimeB(d)
+        thebytes = tiempo.to_bytes()
+        print(thebytes)
+        tiempo2 = app_asdu.TimeB()
+        tiempo2.from_hex(thebytes)
+        self.assertEqual(tiempo2.datetime, d)
+
+    def test_time_b_to_bytes_big(self):
+        d = datetime.datetime(2017, 11, 29, 23, 58, 59, 978000)
+        tiempo = app_asdu.TimeB(d)
+        thebytes = tiempo.to_bytes()
+        print(thebytes)
+        tiempo2 = app_asdu.TimeB()
+        tiempo2.from_hex(thebytes)
+        self.assertEqual(tiempo2.datetime, d)
+
     def test_M_TI_TA_2_from_hex(self):
         c = app_asdu.M_TI_TA_2()
         c.from_hex(bytearray.fromhex("00 64 2a 44 12 08 12"), 1)
-        self.assertEqual(c.tiempo.datetime, datetime.datetime(2018, 4, 10, 4))
+        self.assertEqual(
+            c.tiempo.datetime, datetime.datetime(2018, 8, 18, 4, 42, 25)
+        )
 
     def test_P_MP_NA_2_from_hex(self):
         c = app_asdu.P_MP_NA_2()
