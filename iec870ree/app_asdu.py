@@ -117,7 +117,7 @@ class C_CS_TA_2(BaseAppAsdu):
     """
     type = 181
     causa_tm = 6
-    data_length = 0x07
+    data_length = 0x06
 
     def __init__(self, sincrotime=datetime.datetime.now()):
         self.tiempo = TimeB(sincrotime)
