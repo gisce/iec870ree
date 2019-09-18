@@ -23,7 +23,10 @@ __all__ = [
     'C_CB_UN_2',
     'M_TA_VC_2',
     'M_TA_VM_2',
-    'M_IB_TK_2'
+    'M_IB_TK_2',
+    'C_CS_TA_2',
+    'C_PC_NA_2',
+    'M_PC_NA_2'
 ]
 
 BillingRegister = namedtuple('BillingRegister', ['address', 'active_abs',
@@ -36,6 +39,7 @@ BillingRegister = namedtuple('BillingRegister', ['address', 'active_abs',
 IntegratedTotals = namedtuple('IntegratedTotals', ['address', 'total', 'quality'
                               , 'datetime'])
 
+ContractedPower = namedtuple('ContractedPower', ['address', 'power'])
 
 class AppAsduRegistry(type):
     types = dict()
@@ -105,6 +109,31 @@ class M_TI_TA_2(BaseAppAsdu):
     def from_hex(self, data, cualificador_ev):
         self.tiempo = TimeB()
         self.tiempo.from_hex(data)
+
+
+class C_CS_TA_2(BaseAppAsdu):
+    """
+    Modificación Fecha y Hora
+    """
+    type = 181
+    causa_tm = 6
+    data_length = 0x07
+
+    def __init__(self, sincrotime=datetime.datetime.now()):
+        self.tiempo = TimeB(sincrotime)
+
+    def from_hex(self, data, cualificador_ev):
+        self.tiempo = TimeB()
+        self.tiempo.from_hex(data)
+
+    def to_bytes(self):
+        response = bytearray()
+        response.extend(self.tiempo.to_bytes())
+        return response
+
+    @property
+    def length(self):
+        return 0x10
 
 
 class C_RD_NA_2(BaseAppAsdu):
@@ -449,6 +478,44 @@ class M_IB_TK_2(BaseAppAsdu):
                 position += 5
                 if t == amount:
                     position += 5
+
+
+class C_PC_NA_2(BaseAppAsdu):
+    """
+    Petición Leer potencias contratadas
+    """
+    type = 144
+    causa_tm = 5
+
+    # Register address: 134 or 135 or 136
+
+    def from_hex(self, data, cualificador_ev):
+        pass
+
+    def to_bytes(self):
+        return bytes()
+
+
+class M_PC_NA_2(BaseAppAsdu):
+    """
+    Respuesta potencias contratadas
+    """
+    type = 145
+
+    def __init__(self):
+        self.valores = []
+        self.tiempo = None
+
+    def from_hex(self, data, cualificador_ev):
+        position = 0
+        for i in range(0, cualificador_ev):
+            address = struct.unpack("B", data[position:position + 1])[0]
+            position += 1
+            power = struct.unpack("I", data[position:position + 4])[0]
+            position += 4
+            self.valores.append(ContractedPower(address, power))
+        self.tiempo = TimeA()
+        self.tiempo.from_hex(data[position:position + 5])
 
 
 class TimeBase():

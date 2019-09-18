@@ -15,7 +15,11 @@ logger = logging.getLogger('iec870ree')
 CONTRACTS_REGISTERS = {
     1: 134,
     2: 135,
-    3: 136
+    3: 136,
+    # latent contracts
+    4: 137,
+    5: 138,
+    6: 138
 }
 
 
@@ -205,6 +209,28 @@ class AppLayer(with_metaclass(ABCMeta)):
         for resp in self.process_requestresponse():
             if resp.tipo == M_TA_VM_2.type:
                 yield resp
+
+    def get_contracted_powers(self, register=1):
+        # 144 Get contracted powers
+        if register in CONTRACTS_REGISTERS:
+            register = CONTRACTS_REGISTERS[register]
+        else:
+            logger.error("Wrong values for register")
+            raise ValueError
+        asdu = self.create_asdu_request(C_PC_NA_2(), register)
+        resps = list(self.process_request(asdu))
+        for resp in resps:
+            if isinstance(resp, VariableAsdu) and resp.tipo == M_PC_NA_2.type:
+                return resp
+
+    def set_datetime(self):
+        #181
+        asdu = self.create_asdu_request(C_CS_TA_2())
+        resps = list(self.process_request(asdu))
+
+        for resp in resps:
+            if isinstance(resp, VariableAsdu) and resp.tipo == C_CS_TA_2.type:
+                return resp
 
     def read_blocks_incremental_values(self, start_date, end_date,
                                        register='profiles', adr_object=1):

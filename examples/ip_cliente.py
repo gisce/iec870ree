@@ -33,11 +33,21 @@ def run_example(ip, port, der, dir_pm, clave_pm):
             logging.info("read response {}".format(resp))
         """
         resp = app_layer.get_info()
-        logging.info("read response {}".format(resp))
+        logging.info("read response get_info{}".format(resp.content))
         resp = app_layer.read_datetime()
-        logging.info("read response {}".format(resp))
-        for resp in app_layer.get_info():
-            logging.info("read response {}".format(resp))
+        logging.info("read response read_datetime {}".format(resp.content))
+        now = datetime.datetime.now()
+        meter_date = resp.content.tiempo.datetime
+        diff = (now - meter_date).total_seconds()
+        logging.info("NOW {}".format(now))
+        logging.info("METER DATETIME {}".format(meter_date))
+        logging.info("DIFF {}".format(diff))
+        resp = app_layer.set_datetime()
+        logging.info("read response set_datetime {}".format(resp.content))
+        #resp = app_layer.get_contracted_powers()
+        #logging.info("read response contracted powers {}".format(resp.content))
+        #for resp in app_layer.get_info():
+        #    logging.info("read response get_info {}".format(resp))
     except Exception:
         raise
     finally:
@@ -47,12 +57,11 @@ def run_example(ip, port, der, dir_pm, clave_pm):
 
     
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    
+    logging.basicConfig(level=logging.INFO)
     argv = sys.argv[1:]
     try:
         argv = sys.argv[1:]
-        opts, args = getopt.getopt(argv,"i:hp:d:p:c:",
+        opts, args = getopt.getopt(argv,"i:hp:d:r:c:",
                                    ["ip=", "port=",
                                     "der=", "dir_pm=", "clave_pm="])
     except getopt.GetoptError:
@@ -70,11 +79,11 @@ if __name__ == "__main__":
           sys.exit()
         elif opt in ("-p", "--port"):
           port = int(arg)
-        elif opt in ("-n", "--ip"):
+        elif opt in ("-i", "--ip"):
           ip = arg
         elif opt in ("-d", "--der"):
           der = int(arg)
-        elif opt in ("-p", "--dir_pm"):
+        elif opt in ("-r", "--dir_pm"):
           dir_pm = int(arg)
         elif opt in ("-c", "--clave_pm"):
           clave_pm = int(arg)
