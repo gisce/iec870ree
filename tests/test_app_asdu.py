@@ -81,12 +81,22 @@ class TestAppAsdu(unittest.TestCase):
         tiempo2.from_hex(thebytes)
         self.assertEqual(tiempo2.datetime, d)
 
+    def test_C_CS_TA_2_from_hex(self):
+        sincrotime = datetime.datetime(2018, 8, 18, 4, 42, 25)
+        c = app_asdu.C_CS_TA_2(sincrotime)
+        c.from_hex(bytearray.fromhex("00 64 2a 44 12 08 12"), 1)
+        self.assertEqual(
+            c.tiempo.datetime, datetime.datetime(2018, 8, 18, 4, 42, 25)
+        )
+
     def test_M_TI_TA_2_from_hex(self):
         c = app_asdu.M_TI_TA_2()
         c.from_hex(bytearray.fromhex("00 64 2a 44 12 08 12"), 1)
         self.assertEqual(
             c.tiempo.datetime, datetime.datetime(2018, 8, 18, 4, 42, 25)
         )
+
+
 
     def test_P_MP_NA_2_from_hex(self):
         c = app_asdu.P_MP_NA_2()

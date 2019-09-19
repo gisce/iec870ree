@@ -50,6 +50,9 @@ Implemented ASDUs
 - M_TA_VM_2: Answer to C_TA_VM_2
 - C_CB_UN_2: (optional) Read integrated totals **incremental** values. With blocks choices. Similar to C_CI_NU_2.
 - M_IB_TK_2: Answer to C_CB_UN_2
+- C_CS_TA_2: Set date and time of meter (sincro). Use this ASDU as a response
+- C_PC_NA_2: Read contracted powers
+- M_PC_NA_2: Answer to C_PC_NA_2
 
 History of this project
 -----------------------
