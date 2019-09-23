@@ -232,6 +232,15 @@ class AppLayer(with_metaclass(ABCMeta)):
             if isinstance(resp, VariableAsdu) and resp.tipo == C_CS_TA_2.type:
                 return resp
 
+    def get_savetime_dates(self):
+        #185
+        asdu = self.create_asdu_request(C_CH_TA_2())
+        resps = list(self.process_request(asdu))
+
+        for resp in resps:
+            if isinstance(resp, VariableAsdu) and resp.tipo == M_CH_TA_2.type:
+                return resp
+
     def read_blocks_incremental_values(self, start_date, end_date,
                                        register='profiles', adr_object=1):
         # 190

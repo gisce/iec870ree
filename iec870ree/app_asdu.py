@@ -26,7 +26,9 @@ __all__ = [
     'M_IB_TK_2',
     'C_CS_TA_2',
     'C_PC_NA_2',
-    'M_PC_NA_2'
+    'M_PC_NA_2',
+    'C_CH_TA_2',
+    'M_CH_TA_2'
 ]
 
 BillingRegister = namedtuple('BillingRegister', ['address', 'active_abs',
@@ -190,11 +192,45 @@ class C_AC_NA_2(BaseAppAsdu):
         return 0x0d
 
 
+class C_CH_TA_2(BaseAppAsdu):
+    """
+    Solicitar fechas de cambio de hora
+    """
+    type = 185
+    causa_tm = 5
+
+    def to_bytes(self):
+        return bytes()
+
+    def from_hex(self, data, cualificador_ev):
+        pass
+
+
+class M_CH_TA_2(BaseAppAsdu):
+    """
+    Leer fechas de cambio de hora
+    """
+    type = 131
+    causa_tm = 5
+
+    def to_bytes(self):
+        return bytes()
+
+    def __init__(self):
+        self.tiempo_W2S = None
+        self.tiempo_S2W = None
+
+    def from_hex(self, data, cualificador_ev):
+        self.tiempo_W2S = TimeA()
+        self.tiempo_W2S.from_hex(data[0:5])
+        self.tiempo_S2W = TimeA()
+        self.tiempo_S2W.from_hex(data[5:10])
+
+
 class C_FS_NA_2(BaseAppAsdu):
     """
     Finalizar sesión
     """
-
     type = 187
 
     def from_hex(self, data, cualificador_ev):

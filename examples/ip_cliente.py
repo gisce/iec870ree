@@ -26,14 +26,20 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         resp = app_layer.authenticate(clave_pm)
         logging.info("CLIENTE authenticate response {}".format(resp))
         logging.info("before read")
-        """
-        for resp in app_layer\
-            .read_integrated_totals(datetime.datetime(2017, 10, 1, 1, 0),
-                                    datetime.datetime(2017, 11, 1, 0, 0)):
-            logging.info("read response {}".format(resp))
-        """
         resp = app_layer.get_info()
         logging.info("read response get_info{}".format(resp.content))
+
+        # DAILY BILLINGS
+        #register = 'daily_billings'
+        #logging.info("Getting {} absolute curve".format(register))
+        #for resp in app_layer.read_incremental_values(
+        #    datetime.datetime(2019, 8, 1, 0, 0),
+        #    datetime.datetime(2019, 9, 1, 0, 0),
+        #    register=register
+        #):
+        #    logging.info("read response {}".format(resp.content))
+
+        #GET METER DATETIME
         resp = app_layer.read_datetime()
         logging.info("read response read_datetime {}".format(resp.content))
         now = datetime.datetime.now()
@@ -42,13 +48,20 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         logging.info("NOW {}".format(now))
         logging.info("METER DATETIME {}".format(meter_date))
         logging.info("DIFF {}".format(diff))
-        resp = app_layer.set_datetime()
-        logging.info("read response set_datetime {}".format(resp.content))
+
+        # GET SAVETIME DATES CHANGE
+        resp = app_layer.get_savetime_dates()
+        logging.info("read response get_savetime_dates {}".format(resp.content))
+
+        # SET DATETIME
+        #resp = app_layer.set_datetime()
+        #logging.info("read response set_datetime {}".format(resp.content))
         #resp = app_layer.get_contracted_powers()
         #logging.info("read response contracted powers {}".format(resp.content))
         #for resp in app_layer.get_info():
         #    logging.info("read response get_info {}".format(resp))
-    except Exception:
+    except Exception as e:
+        print(e)
         raise
     finally:
         app_layer.finish_session()
