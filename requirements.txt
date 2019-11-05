@@ -1,3 +1,4 @@
 bitstring==3.1.5
 pyserial==3.4
 six
+pytz

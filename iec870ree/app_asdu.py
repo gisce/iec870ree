@@ -2,10 +2,12 @@
 import bitstring
 import struct
 import datetime
+from pytz import timezone
 from collections import namedtuple
 
 from six import with_metaclass
 
+TIMEZONE = timezone('Europe/Madrid')
 
 __all__ = [
     'C_AC_NA_2',
@@ -521,37 +523,41 @@ class M_PC_NA_2(BaseAppAsdu):
 class TimeBase():
 
     def __init__(self, fecha=datetime.datetime.now()):
-        self.minute = fecha.minute  # UI6
+        locfecha = fecha
+        if not fecha.tzinfo:
+            locfecha = TIMEZONE.localize(fecha)
+        self.minute = locfecha.minute  # UI6
         self.TIS = 0  # BS1 TIS=tariff information switch
         self.IV = 0  # BS1 IV=invalid
-        self.hour = fecha.hour  # UI5
-        self.RES1 = 0  # BS2 RES1=reserve 1
-        self.minute = fecha.minute  # UI6
-        self.TIS = 0  # BS1 TIS=tariff information switch
-        self.IV = 0  # BS1 IV=invalid
-        self.hour = fecha.hour  # UI5
+        self.hour = locfecha.hour  # UI5
         self.RES1 = 0  # BS2 RES1=reserve 1
         # BS1 SUMMER TIME
         # (0 STANDARD TIME, 1 summer time or daylight saving time)
-        self.SU = 0
-        self.dayofmonth = fecha.day  # UI5
-        self.dayofweek = fecha.weekday() + 1  # UI3
-        self.month = fecha.month  # UI4
+        dst = 0
+        if locfecha.tzinfo:
+            dst = int(locfecha.dst().seconds > 0)
+        self.SU = dst
+        self.dayofmonth = locfecha.day  # UI5
+        self.dayofweek = locfecha.weekday() + 1  # UI3
+        self.month = locfecha.month  # UI4
         self.ETI = 0  # UI2 ETI=energy tariff information
         self.PTI = 0  # UI2 PTI=power tariff information
-        self.year = fecha.year % 100  # UI7
+        self.year = locfecha.year % 100  # UI7
         self.RES2 = 0  # BS1
 
         # time B
-        self.seconds = fecha.second
-        self.microseconds = fecha.microsecond
+        self.seconds = locfecha.second
+        self.microseconds = locfecha.microsecond
 
     @property
     def datetime(self):
         year = self.year + 2000
-        return datetime.datetime(
+        dst = self.SU > 0
+        dt = datetime.datetime(
             year, self.month, self.dayofmonth, self.hour, self.minute,
-            self.seconds, self.microseconds)
+            self.seconds, self.microseconds
+        )
+        return TIMEZONE.localize(dt, is_dst=dst)
 
     def __repr__(self):
         # output = "  -- TiempoA Begin -- \n"
@@ -572,7 +578,8 @@ class TimeBase():
         # output += "    datetime: " + str(self.datetime) + "\n"
         # output += "  -- TiempoA End \n"
         # return output
-        return str(self.datetime)
+        dst_txt = {'1': 'S', '0': 'W'}[str(self.SU)]
+        return '{} ({})'.format(str(self.datetime), dst_txt)
 
 
 class TimeA(TimeBase):
