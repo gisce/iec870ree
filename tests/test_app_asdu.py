@@ -51,6 +51,18 @@ class TestAppAsdu(unittest.TestCase):
             localize(datetime.datetime(2010,2,7,11,0))
         )
 
+    def test_empty_time_a_from_hex(self):
+        tiempo = app_asdu.TimeA()
+
+        # 2000 0 0 0 0 0
+        tiempo.from_hex(bytearray.fromhex("00 00 00 00 00"))
+        print(tiempo)
+        self.assertEqual(
+            tiempo.datetime,
+            localize(datetime.datetime(2000, 1, 1, 0 ,0 ,0 , 0))
+        )
+
+
     def test_time_b_from_hex(self):
         tiempo = app_asdu.TimeB()
 
@@ -67,6 +79,17 @@ class TestAppAsdu(unittest.TestCase):
         self.assertEqual(
             tiempo.datetime,
             localize(datetime.datetime(2010, 2, 7, 11, 16, 10, 522000))
+        )
+
+    def test_empty_time_b_from_hex(self):
+        tiempo = app_asdu.TimeB()
+
+        # 2000 0 0 0 0 0
+        tiempo.from_hex(bytearray.fromhex("00 00 00 00 00 00 00"))
+        print(tiempo)
+        self.assertEqual(
+            tiempo.datetime,
+            localize(datetime.datetime(2000, 1, 1, 0 ,0 ,0 , 0))
         )
 
     def test_time_a_to_bytes(self):
