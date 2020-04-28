@@ -594,10 +594,10 @@ class TimeA(TimeBase):
         self.RES1 = bitstring.BitArray(reversed(reversed_bits.read(2))).uint
         self.SU = reversed_bits.read(1).uint
         self.dayofmonth = bitstring.BitArray(reversed(reversed_bits.read(5)))\
-                                   .uint
+                                   .uint or 1
         self.dayofweek = bitstring.BitArray(reversed(reversed_bits.read(3)))\
                                   .uint
-        self.month = bitstring.BitArray(reversed(reversed_bits.read(4))).uint
+        self.month = bitstring.BitArray(reversed(reversed_bits.read(4))).uint or 1
         self.ETI = bitstring.BitArray(reversed(reversed_bits.read(2))).uint
         self.PTI = bitstring.BitArray(reversed(reversed_bits.read(2))).uint
         self.year = bitstring.BitArray(reversed(reversed_bits.read(7))).uint
@@ -654,9 +654,9 @@ class TimeB(TimeBase):
         self.hour = bitstring.BitArray(reversed(reversed_bits.read(5))).uint
         self.RES1 = bitstring.BitArray(reversed(reversed_bits.read(2))).uint
         self.SU = reversed_bits.read(1).uint
-        self.dayofmonth = bitstring.BitArray(reversed(reversed_bits.read(5))).uint
+        self.dayofmonth = bitstring.BitArray(reversed(reversed_bits.read(5))).uint or 1
         self.dayofweek = bitstring.BitArray(reversed(reversed_bits.read(3))).uint
-        self.month = bitstring.BitArray(reversed(reversed_bits.read(4))).uint
+        self.month = bitstring.BitArray(reversed(reversed_bits.read(4))).uint or 1
         self.ETI = bitstring.BitArray(reversed(reversed_bits.read(2))).uint
         self.PTI = bitstring.BitArray(reversed(reversed_bits.read(2))).uint
         self.year = bitstring.BitArray(reversed(reversed_bits.read(7))).uint
