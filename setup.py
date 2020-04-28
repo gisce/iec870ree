@@ -15,7 +15,7 @@ with open('README.rst') as f:
 
 setup(
     name="iec870ree",
-    version="0.4.1",
+    version="0.4.2",
     author="GISCE-TI, S.L.",
     author_email="devel@gisce.net",
     description=("Library to connect and query information about electric"
