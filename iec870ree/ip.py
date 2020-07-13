@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 import logging
 import socket
+import time
 import six
 if six.PY2:
     import Queue as queue
@@ -40,6 +41,7 @@ class Ip(PhysicalLayer):
         self.alive.set()
         self.thread.start()
         logger.debug("Connection with %s created", self.addr)
+        time.sleep(5)
 
     def disconnect(self):
         """Disconnects
