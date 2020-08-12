@@ -116,6 +116,7 @@ class VariableAsdu:
 
         self.tipo = 0
         self.cualificador_ev = 0
+        self.pn = 0
         self.causa_tm = 0
         self.dir_pm = 0
         self.dir_registro = 0
@@ -160,7 +161,9 @@ class VariableAsdu:
         self.der = struct.unpack("H", self.buffer[5:7])[0]
         self.tipo = self.buffer[7]
         self.cualificador_ev = self.buffer[8]
-        self.causa_tm = self.buffer[9]
+        # P/N + causa_tm (6 bits)
+        self.pn = (self.buffer[9] & 0x40) >> 6
+        self.causa_tm = self.buffer[9] & 0x3f
         self.dir_pm = struct.unpack("H", self.buffer[10:12])[0]
         self.dir_registro = self.buffer[12]
         # data from byte 13 to length - 9
@@ -225,7 +228,7 @@ class VariableAsdu:
         output +=  " DER: " + str(self.der) + "\n"
         output +=  " TIPO: " + str(self.tipo) + " " + hex(self.tipo) + "\n"
         output +=  " cualificador estructura variable: " + str(self.cualificador_ev) + "\n"
-        output += " causa transmision: " + str(self.causa_tm) + " " + hex(self.causa_tm) +"\n"
+        output += " causa transmision: " + str(self.causa_tm) + " " + hex(self.causa_tm) + " P/N: " + str(self.pn) + "\n"
         output += " direccion punto medida: " + str(self.dir_pm) + "\n"
         output += " direccion registro: " + str(self.dir_registro) + "\n"
         output += " CONTENIDO: " + (":".join("%02x" % b for b in self.data)) + "\n"
