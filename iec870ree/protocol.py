@@ -48,16 +48,26 @@ def parse_asdu(trama):
 
 
 class ProtocolException(Exception):
-    pass
+
+    message = 'Protocol Exception'
+
+    def __init__(self, message):
+        self.message = 'Protocol Exception: {}'.format(message)
+
+    def __str__(self):
+        return self.message
 
 
 class IntegrationPeriodNotAvailable(Exception):
-    pass
+
+    def __str__(self):
+        return 'Integration Period Not available'
 
 
 class RequestedASDUTypeNotAvailable(Exception):
-    pass
 
+    def __str__(self):
+        return 'Requested ASDU Type Not Available'
 
 class AppLayer(with_metaclass(ABCMeta)):
 
