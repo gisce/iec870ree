@@ -59,6 +59,10 @@ class RequestedASDUTypeNotAvailable(Exception):
     pass
 
 
+class ASDUDirectionUnknown(Exception):
+    pass
+
+
 class AppLayer(with_metaclass(ABCMeta)):
 
     def initialize(self, link_layer):
@@ -115,11 +119,14 @@ class AppLayer(with_metaclass(ABCMeta)):
             elif asdu_resp.causa_tm == 0x0E:
                 logger.error("Requested ASDU-type not available")
                 raise RequestedASDUTypeNotAvailable()
-            elif asdu_resp.causa_tm == 0x12:
-                logger.error("Requested integration period not available")
-                raise IntegrationPeriodNotAvailable()
+            elif asdu_resp.causa_tm == 0x10:
+                logger.error("ASDU Direction especification unknown")
+                raise ASDUDirectionUnknown()
             elif asdu_resp.causa_tm == 0x11:
                 logger.error("Requested information object not available")
+                raise IntegrationPeriodNotAvailable()
+            elif asdu_resp.causa_tm == 0x12:
+                logger.error("Requested integration period not available")
                 raise IntegrationPeriodNotAvailable()
             else:
                 raise Exception('ERROR: Transmission cause unknown: {}'.format(asdu_resp.causa_tm))
