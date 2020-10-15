@@ -13,6 +13,8 @@ class AsduParser:
 
     def append_and_get_if_completed(self, bt):
         if self.asdu is None:
+            if bt == 255:
+                return None
             self.create_asdu(bt)
 
         if self.asdu.append(bt):
