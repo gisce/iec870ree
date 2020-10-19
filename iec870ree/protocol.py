@@ -227,6 +227,14 @@ class AppLayer(with_metaclass(ABCMeta)):
             if resp.tipo == M_TA_VM_2.type:
                 yield resp
 
+    def get_configuration(self):
+        #141
+        asdu = self.create_asdu_request(C_RM_NA_2())
+        resps = list(self.process_request(asdu))
+        for resp in resps:
+            if isinstance(resp, VariableAsdu) and resp.tipo == M_RM_NA_2.type:
+                return resp
+
     def get_contracted_powers(self, register=1):
         # 144 Get contracted powers
         if register in CONTRACTS_REGISTERS:

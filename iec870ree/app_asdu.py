@@ -28,7 +28,9 @@ __all__ = [
     'M_IB_TK_2',
     'C_CS_TA_2',
     'C_PC_NA_2',
-    'M_PC_NA_2'
+    'M_PC_NA_2',
+    'C_RM_NA_2',
+    'M_RM_NA_2'
 ]
 
 BillingRegister = namedtuple('BillingRegister', ['address', 'active_abs',
@@ -42,6 +44,41 @@ IntegratedTotals = namedtuple('IntegratedTotals', ['address', 'total', 'quality'
                               , 'datetime'])
 
 ContractedPower = namedtuple('ContractedPower', ['address', 'power'])
+
+SerialPortConf = namedtuple('SerialPortConf', ['speed', 'params', 'start_mode', 'start_string'])
+
+SERIAL_PORT_SPEED = {
+    0: 'Not available',
+    1: '300',
+    2: '600',
+    3: '1.200',
+    4: '2.400',
+    5: '4.800',
+    6: '9.600',
+    7: '14.400',
+    8: '19.200',
+    9: '28.800',
+    10: '38.400',
+    11: '57.600',
+    12: '115.200',
+    255: 'Other',
+}
+
+SERIAL_PORT_PARAM = {
+    0: 'Not available',
+    1: '7N1',
+    2: '7E1',
+    3: '7O1',
+    4: '7N2',
+    5: '7E2',
+    6: '7O2',
+    7: '8N1',
+    8: '8E1',
+    9: '8O1',
+    10: '8N2',
+    11: '8E2',
+    12: '8O2',
+}
 
 class AppAsduRegistry(type):
     types = dict()
@@ -518,6 +555,105 @@ class M_PC_NA_2(BaseAppAsdu):
             self.valores.append(ContractedPower(address, power))
         self.tiempo = TimeA()
         self.tiempo.from_hex(data[position:position + 5])
+
+
+class C_RM_NA_2(BaseAppAsdu):
+    """
+    Petición configuración equipo
+    """
+    type = 141
+    causa_tm = 5
+
+    def from_hex(self, data, cualificador_ev):
+        pass
+
+    def to_bytes(self):
+        return bytes()
+
+
+class M_RM_NA_2(BaseAppAsdu):
+     """
+     Respuesta configuración equipo
+     """
+     type = 142
+
+     def __init__(self):
+         self.codigo_fabricante = None
+         self.codigo_equipo = None
+         self.modelo_fabricante = ''
+         self.firmware = None
+         self.iec_date = None
+         self.battery = None
+         self.iec_version_date = None
+         self.serial_port_1 = None
+         self.serial_port_2 = None
+         self.optical_port = None
+         self.primari_V = None
+         self.secondary_V = None
+         self.primari_I = None
+         self.secondary_I = None
+         self.integration_period_1 = None
+         self.integration_period_2 = None
+         self.integration_period_3 = None
+         self.active_contracts = []
+
+     def from_hex(self, data, cualificador_ev):
+         self.codigo_fabricante = struct.unpack("B", data[0:1])[0]
+         self.modelo_fabricante = (
+             chr(struct.unpack("B", data[1:2])[0] or '') +
+             chr(struct.unpack("B", data[2:3])[0] or '')
+         )
+         self.firmware = struct.unpack("B", data[3:4])[0]
+         self.codigo_equipo = struct.unpack("I", data[4:8])[0]
+         # 0-4 bits: month 5-8: year
+         iec_date_field = struct.unpack("B", data[8:9])[0]
+         self.iec_date = '{}/{}'.format(iec_date_field & 15, ((iec_date_field & 240) >> 4) + 2000)
+         self.iec_version_date = TimeA()
+         self.iec_version_date.from_hex(data[9:14])
+         self.battery = struct.unpack("B", data[14:15])[0]
+         position = 15
+         for serialport in ['1' ,'2']:
+             speed = SERIAL_PORT_SPEED[
+                 struct.unpack("B", data[position:position+1])[0]
+             ]
+             position+=1
+             params = SERIAL_PORT_PARAM[
+                 struct.unpack("B", data[position:position+1])[0]
+             ]
+             position += 1
+             mode = struct.unpack("B", data[position:position + 1])[0]
+             position += 1
+             start_string = ''
+             eof = False
+             for i in range(0, 20):
+                 val = struct.unpack("B", data[position:position + 1])[0]
+                 position += 1
+                 if val != 0 and not eof:
+                     start_string += chr(val)
+                     eof = True
+             portconf = SerialPortConf(
+                 speed, params, mode, start_string
+             )
+             setattr(self, "serial_port_{}".format(serialport), portconf)
+         self.optical_port = SerialPortConf(
+             SERIAL_PORT_SPEED[struct.unpack("B", data[40:41])[0]],
+             SERIAL_PORT_PARAM[struct.unpack("B", data[41:42])[0]],
+             0,
+             ''
+         )
+         self.primari_V = struct.unpack("I", data[42:46])[0] / 10.0
+         self.secondary_V = struct.unpack("I", data[46:50])[0] / 10.0
+         self.primari_I = struct.unpack("I", data[50:54])[0] / 10.0
+         self.secondary_I = struct.unpack("I", data[54:58])[0] /10.0
+         self.integration_period_1 = struct.unpack("B", data[58:59])[0]
+         self.integration_period_2 = struct.unpack("B", data[59:60])[0]
+         self.integration_period_3 = struct.unpack("B", data[60:61])[0]
+         active_contracts_byte = struct.unpack("B", data[61:62])[0]
+         contracts = []
+         for i in [0, 2, 4]:
+             if active_contracts_byte & (2 << i):
+                 contracts.append(int(i/2 + 1))
+         self.active_contracts = contracts
 
 
 class TimeBase():
