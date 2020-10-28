@@ -3,7 +3,7 @@ import unittest
 import datetime
 from pytz import timezone
 from iec870ree import app_asdu
-from iec870ree.app_asdu import IntegratedTotals, BillingRegister
+from iec870ree.app_asdu import IntegratedTotals, BillingRegister, SerialPortConf
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -345,3 +345,36 @@ class TestAppAsdu(unittest.TestCase):
                 )
             ]
         )
+
+    def test_M_RM_NA_2_from_hex(self):
+        c = app_asdu.M_RM_NA_2()
+        c.from_hex(bytearray.fromhex(
+            "42 4b 41 4d c6 12 e1 02 24 00 80 ea f2 03 26 06 08 ff 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
+            "00 00 00 06 08 06 08 98 ab 02 00 4c 04 00 00 19 00 00 00 32 00 00 00 3c 0f 00 1a 00 00 00 00 00 00 00 00 "
+            "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
+            "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
+            "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
+            "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
+            "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"),
+            1
+        )
+        print(c)
+        self.assertEqual(c.codigo_fabricante, 66)
+        self.assertEqual(c.codigo_equipo, 48304838)
+        self.assertEqual(c.modelo_fabricante, 'KA')
+        self.assertEqual(c.firmware, 77)
+        self.assertEqual(c.iec_date, '4/2002')
+        self.assertEqual(c.battery, 38)
+        self.assertEqual(c.iec_version_date.datetime, localize(datetime.datetime(2003, 2, 10, 0, 0, 0)))
+        self.assertEqual(c.serial_port_1, SerialPortConf(speed='9.600', params='8E1', start_mode=255, start_string=' '))
+        self.assertEqual(c.serial_port_2, SerialPortConf(speed='9.600', params='8E1', start_mode=6, start_string='\x08'))
+        self.assertEqual(c.optical_port, SerialPortConf(speed='9.600', params='8E1', start_mode=0, start_string=''))
+        self.assertEqual(c.primari_V, 17500.0)
+        self.assertEqual(c.secondary_V, 110.0)
+        self.assertEqual(c.primari_I, 2.5)
+        self.assertEqual(c.secondary_I, 5.0)
+        self.assertEqual(c.integration_period_1, 60)
+        self.assertEqual(c.integration_period_2, 15)
+        self.assertEqual(c.integration_period_3, 0)
+        self.assertEqual(c.active_contracts, [1, 2])
+
