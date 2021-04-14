@@ -19,7 +19,7 @@ CONTRACTS_REGISTERS = {
     # latent contracts
     4: 137,
     5: 138,
-    6: 138
+    6: 139
 }
 
 
@@ -34,6 +34,16 @@ REQUESTS_TYPES = {
     0: 9,
     1: 10,
     2: 11
+}
+
+
+EXT_TARIFF_OBJECTS = {
+    'special_days': 192,
+    'seasons': 193,
+    'reset': 194, # ONLY WRITE
+    'monthly_bill': 195, # TO TEST
+    'latent_activation_date': 196,
+    'current_period': 197
 }
 
 
@@ -271,8 +281,29 @@ class AppLayer(with_metaclass(ABCMeta)):
         # do not remove this as we have to iterate over physical layer frames.
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if resp.tipo == 140:
+            if isinstance(resp, VariableAsdu) and resp.tipo == 140:
                 yield resp
+
+    # Protocol extension
+    def ext_read_contract_tariff_info(self, register=1, objects=['special_days']):
+        # 150
+        import pdb; pdb.set_trace()
+        if register in CONTRACTS_REGISTERS:
+            register = CONTRACTS_REGISTERS[register]
+        else:
+            logger.error("Wrong values for register")
+            raise ValueError
+        object_codes = []
+        for object in objects:
+            if object in EXT_TARIFF_OBJECTS:
+                object_codes.append(EXT_TARIFF_OBJECTS[object])
+
+        asdu = self.create_asdu_request(P_TA_IN_2(object_codes), register)
+        resps = list(self.process_request(asdu))
+
+        for resp in resps:
+            if isinstance(resp, VariableAsdu): # and resp.tipo == P_TA_IN_2.type:
+                return resp
 
     def create_asdu_request(self, user_data, registro=0):
         asdu = VariableAsdu()

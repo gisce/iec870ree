@@ -30,7 +30,11 @@ __all__ = [
     'C_PC_NA_2',
     'M_PC_NA_2',
     'C_RM_NA_2',
-    'M_RM_NA_2'
+    'M_RM_NA_2',
+    # AMPLIACION PROTOCOLO
+    'P_TA_IN_2',
+    #'R_TA_IN_2',
+    #'M_TA_IN_2',
 ]
 
 BillingRegister = namedtuple('BillingRegister', ['address', 'active_abs',
@@ -654,6 +658,42 @@ class M_RM_NA_2(BaseAppAsdu):
              if active_contracts_byte & (2 << i):
                  contracts.append(int(i/2 + 1))
          self.active_contracts = contracts
+
+
+# Protocol extension
+# Contracts and Billing
+class P_TA_IN_2(BaseAppAsdu):
+    """
+    Petición info tarificación
+
+    direccion registro:
+        134, 135, 136: Contrato activo I,II,III
+        137, 138, 139: Contrato latetnte I,II,III
+    direcciones objeto (lista):
+        192: Dias especiales
+        193: Temporadas
+        195: Info cierres mensuales? (to test)
+        196: Fecha activación latente (sólo contratos latentes)
+        197: Período en curso
+    """
+    type = 150
+    causa_tm = 5
+
+    def __init__(self, objetos=[192]):
+        self.objetos = objetos
+
+    def from_hex(self, data, cualificador_ev):
+        pass
+
+    def to_bytes(self):
+        response = bytearray()
+        for objeto in self.objetos:
+            response.extend(struct.pack("B", objeto))
+        return response
+
+    @property
+    def length(self):
+        return 0x09 + len(self.objetos)
 
 
 class TimeBase():
