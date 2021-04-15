@@ -30,7 +30,10 @@ __all__ = [
     'C_PC_NA_2',
     'M_PC_NA_2',
     'C_RM_NA_2',
-    'M_RM_NA_2'
+    'M_RM_NA_2',
+    # AMPLIACION DE PROTOCOLO
+    'P_IN_VA_2',
+    'R_IN_VA_2',
 ]
 
 BillingRegister = namedtuple('BillingRegister', ['address', 'active_abs',
@@ -46,6 +49,19 @@ IntegratedTotals = namedtuple('IntegratedTotals', ['address', 'total', 'quality'
 ContractedPower = namedtuple('ContractedPower', ['address', 'power'])
 
 SerialPortConf = namedtuple('SerialPortConf', ['speed', 'params', 'start_mode', 'start_string'])
+
+InstantTotals = namedtuple('InstantTotals', [
+    'ai', 'ai_val', 'ae', 'ae_val',
+    'r1', 'r1_val', 'r2', 'r2_val', 'r3', 'r3_val', 'r4','r4_val',
+    'measure_date'])
+
+InstantPower = namedtuple('InstantPower', [
+        'fase', 'potencia_activa', 'potencia_reactiva', 'factor_potencia',
+        'is_exporting_activa', 'is_exporting_reactiva', 'valid'
+    ]
+)
+
+InstantPhaseVI = namedtuple('InstantPhaseVI', ['phase', 'I', 'V', 'valid'])
 
 SERIAL_PORT_SPEED = {
     0: 'Not available',
@@ -79,6 +95,26 @@ SERIAL_PORT_PARAM = {
     11: '8E2',
     12: '8O2',
 }
+
+
+# PROTOCOL EXTENSIONS
+
+# 163 response
+INSTANT_VALUES_OBJECTS = {
+    192: {
+        'name': 'totalizadores',
+        'object': 'TotalizadoresInstantaneos'
+    },
+    193: {
+        'name': 'potencias',
+        'object': 'PotenciaInstantanea'
+    },
+    194: {
+        'name': 'I_V',
+        'object': 'IVInstantaneos'
+    }
+}
+
 
 class AppAsduRegistry(type):
     types = dict()
@@ -656,6 +692,67 @@ class M_RM_NA_2(BaseAppAsdu):
          self.active_contracts = contracts
 
 
+# Protocol extension
+# Instant Values
+class P_IN_VA_2(BaseAppAsdu):
+    """
+    Petición valores instantáneos
+    direccion registro: 0
+    direcciones objeto (lista):
+        192: Totalizadores Energía
+        193: Potencias Activas
+        194: Tensiones e Intensidades
+    """
+    type = 162
+    causa_tm = 5
+
+    def __init__(self, objetos=[192]):
+        self.objetos = objetos
+        self.data_length = len(self.objetos) * 0x06
+
+    def from_hex(self, data, cualificador_ev):
+        pass
+
+    def to_bytes(self):
+        response = bytearray()
+        for objeto in self.objetos:
+            response.extend(struct.pack("B", objeto))
+        return response
+
+    @property
+    def length(self):
+        return 0x09 + len(self.objetos)
+
+class R_IN_VA_2(BaseAppAsdu):
+    """
+    Respuesta valores instantáneos
+    direccion registro: 0
+    direcciones objeto (lista):
+        192: Totalizadores Energía
+        193: Potencias Activas
+        194: Tensiones e Intensidades
+    """
+    type = 163
+    causa_tm = 5
+
+    def __init__(self):
+        self.valores = []
+
+    def from_hex(self, data, cualificador_ev):
+        pos = 0
+        for obj_idx in range(cualificador_ev):
+            object_id = struct.unpack("B", data[pos:pos+1])[0]
+            pos +=1
+            object_class = globals()[INSTANT_VALUES_OBJECTS[object_id]['object']]
+            the_object = object_class()
+            the_object.from_hex(data[pos:pos + the_object.length])
+            self.valores.append(the_object)
+            pos += the_object.length
+
+    def to_bytes(self):
+        pass
+
+
 class TimeBase():
 
     def __init__(self, fecha=datetime.datetime.now()):
@@ -843,3 +940,119 @@ class TimeB(TimeBase):
         response = response[::-1]
         inbytes = response.tobytes()[::-1]
         return inbytes
+
+
+class TotalizadoresInstantaneos():
+
+    tipo = 163
+    objeto = 192
+    length = 29
+
+    def __init__(self):
+        self.valores = None
+
+    def from_hex(self, data):
+        ai = struct.unpack("I", data[0:4])[0]
+        ae = struct.unpack("I", data[4:8])[0]
+        r1 = struct.unpack("I", data[8:12])[0]
+        r2 = struct.unpack("I", data[12:16])[0]
+        r3 = struct.unpack("I", data[16:20])[0]
+        r4 = struct.unpack("I", data[20:24])[0]
+        dt = TimeA()
+        dt.from_hex(data[24:29])
+
+        it = InstantTotals(
+            ai & 0x07ffffff, ai & 0x8000000 and False or True,  # kWh , 0 valid/1 invalid
+            ae & 0x07ffffff, ai & 0x8000000 and False or True,  # kWh , 0 valid/1 invalid
+            r1 & 0x07ffffff, ai & 0x8000000 and False or True,  # kVArh , 0 valid/1 invalid
+            r2 & 0x07ffffff, ai & 0x8000000 and False or True,  # kVArh , 0 valid/1 invalid
+            r3 & 0x07ffffff, ai & 0x8000000 and False or True,  # kVArh , 0 valid/1 invalid
+            r4 & 0x07ffffff, ai & 0x8000000 and False or True,  # kVArh , 0 valid/1 invalid
+            dt)                                                 # Loalized datetime
+
+        self.valores = it
+
+        return self.valores
+
+    def __repr__(self):
+        output = "\n-- TotalizadoresInstantaneos BEGIN--\n"
+        output += repr(self.valores) + "\n"
+        output += "-- TotalizadoresInstantaneos END--\n"
+        return output
+
+
+class PotenciaInstantanea():
+
+    tipo = 163
+    objeto = 193
+    length = 37
+
+    def __init__(self):
+        self.valores = []
+
+    def from_hex(self, data):
+        reversed_bytes = bitstring.BitArray(bytearray(reversed(data)))
+        reversed_bits = bitstring.BitStream(reversed(reversed_bytes))
+
+        for name in ['Total', 'Phase I', 'Phase II', 'Phase III']:
+            potencia_activa = bitstring.BitArray(reversed(reversed_bits.read(24))).uint       # kW
+            potencia_reactiva = bitstring.BitArray(reversed(reversed_bits.read(24))).uint     # kVAr
+            factor_potencia = bitstring.BitArray(reversed(reversed_bits.read(10))).uint       # cos phi in millis
+            is_exporting_activa = bitstring.BitArray(reversed(reversed_bits.read(1))).bool    # 0 importada/ 1 exportada
+            is_exporting_reactiva = bitstring.BitArray(reversed(reversed_bits.read(1))).bool  # 0 Q1/Q4 / 1 Q2/Q3
+            bitstring.BitArray(reversed(reversed_bits.read(3)))                               # not used
+            invalid = bitstring.BitArray(reversed(reversed_bits.read(1))).bool                # 0 valid/ 1 invalid
+            ip = InstantPower(
+                name, potencia_activa, potencia_reactiva, factor_potencia / 1000.0,
+                is_exporting_activa, is_exporting_reactiva, not invalid
+            )
+
+            self.valores.append(ip)
+
+        dt = TimeA()
+        dt.from_hex(data[32:37])
+        self.valores.append(dt)  # Localized datetime
+        return self.valores
+
+    def __repr__(self):
+        output = "\n-- PotenciaInstantanea BEGIN --\n"
+        for value in self.valores:
+            output += '{}\n'.format(value)
+        output += "-- PotenciaInstantanea BEGIN --\n"
+        return output
+
+
+class IVInstantaneos():
+
+    tipo = 163
+    objeto = 194
+    length = 26
+
+    def __init__(self):
+        self.valores = []
+
+    def from_hex(self, data):
+        reversed_bytes = bitstring.BitArray(bytearray(reversed(data)))
+        reversed_bits = bitstring.BitStream(reversed(reversed_bytes))
+
+        for phase in ['I', 'II', 'III']:
+            intensidad_dA = bitstring.BitArray(reversed(reversed_bits.read(24))).uint  # in dA
+            tension_dV = bitstring.BitArray(reversed(reversed_bits.read(30))).uint     # in dV
+            bitstring.BitArray(reversed(reversed_bits.read(1)))                        # not used
+            invalid = bitstring.BitArray(reversed(reversed_bits.read(1))).bool         # valid 0/invalid 1
+
+            ipiv = InstantPhaseVI(phase, intensidad_dA / 10.0, tension_dV / 10.0, not invalid)
+            self.valores.append(ipiv)
+
+        dt = TimeA()
+        dt.from_hex(data[21:26])
+        self.valores.append(dt)
+
+        return self.valores
+
+    def __repr__(self):
+        output = "\n-- IVInstantaneos BEGIN--\n"
+        for value in self.valores:
+            output += '{}\n'.format(value)
+        output += "-- IVInstantaneos END--\n"
+        return output
