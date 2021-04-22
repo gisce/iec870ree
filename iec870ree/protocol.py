@@ -4,6 +4,7 @@ from .base_asdu import (
     AsduParser, FixedAsdu, VariableAsdu
 )
 from .app_asdu import *
+from .app_asdu import INSTANT_VALUES_OBJECTS
 import math
 
 from six import with_metaclass
@@ -35,6 +36,9 @@ REQUESTS_TYPES = {
     1: 10,
     2: 11
 }
+
+
+EXT_INSTANT_OBJECTS = dict([(v['name'], k) for k, v in INSTANT_VALUES_OBJECTS.items()])
 
 
 def parse_asdu(trama):
@@ -273,6 +277,29 @@ class AppLayer(with_metaclass(ABCMeta)):
         for resp in self.process_requestresponse():
             if resp.tipo == 140:
                 yield resp
+
+    # Protocol extension
+    def ext_read_instant_values(self, register=0, objects=['totalizadores']):
+        # 162
+
+        object_codes = []
+        for object in objects:
+            # You may pass either name or value
+            if object in EXT_INSTANT_OBJECTS.keys():
+                object_codes.append(EXT_INSTANT_OBJECTS[object])
+            elif object in EXT_INSTANT_OBJECTS.values():
+                object_codes.append(object)
+            else:
+                logger.error("Wrong values for required objects: {}".format(objects))
+                raise ValueError
+
+        object_codes = list(set(object_codes))
+        asdu = self.create_asdu_request(P_IN_VA_2(object_codes), register)
+        resps = list(self.process_request(asdu))
+
+        for resp in resps:
+            if isinstance(resp, VariableAsdu): # and resp.tipo == P_TA_IN_2.type:
+                return resp
 
     def create_asdu_request(self, user_data, registro=0):
         asdu = VariableAsdu()

@@ -378,3 +378,16 @@ class TestAppAsdu(unittest.TestCase):
         self.assertEqual(c.integration_period_3, 0)
         self.assertEqual(c.active_contracts, [1, 2])
 
+    def test_R_IN_VA_2(self):
+        c = app_asdu.R_IN_VA_2()
+        data = bytearray.fromhex(
+            "c0 62 e7 03 00 d2 0f 01 00 99 b1 00 00 5e 25 00 "
+            "00 9d 01 00 00 06 0b 00 00 37 92 6e 04 15 c1 08 "
+            "00 00 03 00 00 9a 03 02 00 00 00 00 00 dc 01 03 "
+            "00 00 01 00 00 05 02 02 00 00 01 00 00 aa 01 37 "
+            "92 6e 04 15 c2 0c 00 00 55 09 00 00 0d 00 00 55 "
+            "09 00 00 0c 00 00 47 09 00 00 37 92 6e 04 15 03 "
+            "16"
+        )
+        c.from_hex(data, 3)
+        print(c)
