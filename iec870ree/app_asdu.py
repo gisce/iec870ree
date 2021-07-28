@@ -32,6 +32,10 @@ __all__ = [
     'C_RM_NA_2',
     'M_RM_NA_2',
     # AMPLIACION DE PROTOCOLO
+    # meter tariff conf
+    'P_TA_IN_2',
+    'R_TA_IN_2',
+    # instant value
     'P_IN_VA_2',
     'R_IN_VA_2',
 ]
@@ -49,6 +53,16 @@ IntegratedTotals = namedtuple('IntegratedTotals', ['address', 'total', 'quality'
 ContractedPower = namedtuple('ContractedPower', ['address', 'power'])
 
 SerialPortConf = namedtuple('SerialPortConf', ['speed', 'params', 'start_mode', 'start_string'])
+
+Season = namedtuple('Season', [
+        'temporada', 'inicio', 'tipo_dia_laborable', 'tipo_dia_festivo'
+    ]
+)
+
+Day = namedtuple('Day', [
+        'tipo', 'horas'
+    ]
+)
 
 InstantTotals = namedtuple('InstantTotals', [
     'ai', 'ai_val', 'ae', 'ae_val',
@@ -98,6 +112,23 @@ SERIAL_PORT_PARAM = {
 
 
 # PROTOCOL EXTENSIONS
+
+# 151 response
+TARIFF_CONF_OBJECTS = {
+#    192: {
+#        'name': 'totalizadores',
+#        'object': 'TotalizadoresInstantaneos'
+#    },
+    193: {
+        'name': 'seasons',
+        'object': 'Seasons'
+    },
+#    194: {
+#        'name': 'I_V',
+#        'object': 'IVInstantaneos'
+#    }
+}
+
 
 # 163 response
 INSTANT_VALUES_OBJECTS = {
@@ -693,6 +724,72 @@ class M_RM_NA_2(BaseAppAsdu):
 
 
 # Protocol extension
+# Tariff configuration
+class P_TA_IN_2(BaseAppAsdu):
+    """
+    Petición info tarificación
+
+    direccion registro:
+        134, 135, 136: Contrato activo I,II,III
+        137, 138, 139: Contrato latetnte I,II,III
+    direcciones objeto (lista):
+        192: Dias especiales
+        193: Temporadas
+        195: Info cierres mensuales? (to test)
+        196: Fecha activación latente (sólo contratos latentes)
+        197: Período en curso
+   """
+    type = 150
+    causa_tm = 5
+
+    def __init__(self, objetos=[192]):
+        self.objetos = objetos
+        self.data_length = len(self.objetos) * 0x06
+
+    def from_hex(self, data, cualificador_ev):
+        pass
+
+    def to_bytes(self):
+        response = bytearray()
+        for objeto in self.objetos:
+            response.extend(struct.pack("B", objeto))
+        return response
+
+    @property
+    def length(self):
+        return 0x09 + len(self.objetos)
+
+
+class R_TA_IN_2(BaseAppAsdu):
+    """
+    Respuesta valores instantáneos
+    direccion registro: 0
+    direcciones objeto (lista):
+        192: Totalizadores Energía
+        193: Potencias Activas
+        194: Tensiones e Intensidades
+    """
+    type = 151
+    causa_tm = 5
+
+    def __init__(self):
+        self.valores = []
+
+    def from_hex(self, data, cualificador_ev):
+        pos = 0
+        for obj_idx in range(cualificador_ev):
+            object_id = struct.unpack("B", data[pos:pos+1])[0]
+            pos +=1
+            object_class = globals()[TARIFF_CONF_OBJECTS[object_id]['object']]
+            the_object = object_class()
+            length = the_object.from_hex(data[pos:])
+            self.valores.append(the_object)
+            pos += length
+
+    def to_bytes(self):
+        pass
+
+
 # Instant Values
 class P_IN_VA_2(BaseAppAsdu):
     """
@@ -940,6 +1037,67 @@ class TimeB(TimeBase):
         response = response[::-1]
         inbytes = response.tobytes()[::-1]
         return inbytes
+
+
+class Seasons():
+
+    tipo = 151
+    objeto = 193
+
+    def __init__(self):
+        self.sentido = 0
+        self.tipo = 0
+        self.temporadas = []
+        self.dias = []
+        self.fecha_activacion = None
+
+    def from_hex(self, data):
+        self.valores = data
+        self.sentido = struct.unpack("B", data[0:1])[0]
+#        print("Sentido {}".format(self.sentido))
+        self.tipo = struct.unpack("B", data[1:2])[0]
+#        print("Tipo {}".format(self.tipo))
+        num_temporadas = struct.unpack("B", data[2:3])[0]
+#        print("Num Temporadas {}".format(num_temporadas))
+        pos = 3
+        for temporada in range(num_temporadas):
+            fecha_inicio = TimeA()
+            fecha_inicio.from_hex(data[pos:pos + 5])
+            pos += 5
+            tipos = struct.unpack("B", data[pos:pos + 1])[0]
+            pos += 1
+            tipo_laborable = tipos & 0x0f
+            tipo_festivo = (tipos & 0xf0) >> 4
+            s = Season(temporada + 1, fecha_inicio, tipo_laborable, tipo_festivo)
+            self.temporadas.append(s)
+        num_tipo_dias = struct.unpack("B", data[pos:pos + 1])[0]
+        pos += 1
+        for tipo_dia in range(num_tipo_dias):
+            horas = ""
+            for hora in range(12):
+                horas += str(data[pos] & 0x0f)
+                horas += str((data[pos] & 0xf0) >> 4)
+                pos += 1
+            self.dias.append(Day(tipo_dia + 1, horas))
+        self.fecha_activacion = TimeA()
+        self.fecha_activacion.from_hex(data[pos:pos + 5])
+        pos += 5
+#        print(self.fecha_activacion)
+
+        return pos
+
+    def __repr__(self):
+        output = "\n-- Temporadas BEGIN--\n"
+        output += "Sentido: {} ({}) Tipo: {} ({})\n".format(
+            self.sentido, self.sentido == 1 and 'Entrante' or 'Saliente',
+            self.tipo, self.tipo == 2 and 'Anual' or 'I/V')
+        for temporada in self.temporadas:
+            output += repr(temporada) + "\n"
+        for dia in self.dias:
+            output += repr(dia) + "\n"
+        output += "Fecha activación: {}\n".format(self.fecha_activacion)
+        output += "-- Temporadas END--\n"
+        return output
 
 
 class TotalizadoresInstantaneos():

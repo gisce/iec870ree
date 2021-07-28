@@ -20,7 +20,7 @@ CONTRACTS_REGISTERS = {
     # latent contracts
     4: 137,
     5: 138,
-    6: 138
+    6: 139
 }
 
 
@@ -39,6 +39,16 @@ REQUESTS_TYPES = {
 
 
 EXT_INSTANT_OBJECTS = dict([(v['name'], k) for k, v in INSTANT_VALUES_OBJECTS.items()])
+
+
+EXT_TARIFF_OBJECTS = {
+    'special_days': 192,
+    'seasons': 193,
+    'reset': 194, # ONLY WRITE
+    'monthly_bill': 195, # TO TEST
+    'latent_activation_date': 196,
+    'current_period': 197
+}
 
 
 def parse_asdu(trama):
@@ -299,6 +309,29 @@ class AppLayer(with_metaclass(ABCMeta)):
 
         for resp in resps:
             if isinstance(resp, VariableAsdu): # and resp.tipo == P_TA_IN_2.type:
+                return resp
+
+    # Protocol extension
+    def ext_read_contract_tariff_info(self, register=134, objects=['special_days']):
+        # 150
+
+        object_codes = []
+        for object in objects:
+            # You may pass either name or value
+            if object in EXT_TARIFF_OBJECTS.keys():
+                object_codes.append(EXT_TARIFF_OBJECTS[object])
+            elif object in EXT_TARIFF_OBJECTS.values():
+                object_codes.append(object)
+            else:
+                logger.error("Wrong values for required objects: {}".format(objects))
+                raise ValueError
+
+        object_codes = list(set(object_codes))
+        asdu = self.create_asdu_request(P_TA_IN_2(object_codes), register)
+        resps = list(self.process_request(asdu))
+
+        for resp in resps:
+            if isinstance(resp, VariableAsdu):
                 return resp
 
     def create_asdu_request(self, user_data, registro=0):
