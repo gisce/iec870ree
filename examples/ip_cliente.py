@@ -26,29 +26,82 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         resp = app_layer.authenticate(clave_pm)
         logging.info("CLIENTE authenticate response {}".format(resp))
         logging.info("before read")
-        """
-        for resp in app_layer\
-            .read_integrated_totals(datetime.datetime(2017, 10, 1, 1, 0),
-                                    datetime.datetime(2017, 11, 1, 0, 0)):
-            logging.info("read response {}".format(resp))
-        """
+
         resp = app_layer.get_info()
         logging.info("read response get_info{}".format(resp.content))
-        resp = app_layer.read_datetime()
-        logging.info("read response read_datetime {}".format(resp.content))
-        now = datetime.datetime.now()
-        meter_date = resp.content.tiempo.datetime
-        diff = (now - meter_date).total_seconds()
-        logging.info("NOW {}".format(now))
-        logging.info("METER DATETIME {}".format(meter_date))
-        logging.info("DIFF {}".format(diff))
-        resp = app_layer.set_datetime()
-        logging.info("read response set_datetime {}".format(resp.content))
+ 
+        ##### CURRENT MEASURE (133)
+        #logging.info("LEER CIERRES ACTUALES")
+        #for resp in app_layer.current_tariff_info(register=1):
+        #    logging.info("read response current_tariff_info (Cierres actuales) {}".format(resp))
+
+        ##### CIERRES (136)
+        #logging.info("LEER CIERRES DE FEBRERO")
+        #for resp in app_layer.stored_tariff_info(
+        #        datetime.datetime(2021, 1, 1, 1, 0),
+        #        datetime.datetime(2021, 2, 1, 0, 0)):
+        #    logging.info("read response stored_tariff_info (Cierres) {}".format(resp))
+
+        ##### Configuration
+        #resp = app_layer.get_configuration()
+        #logging.info("read response get_configuration {}".format(resp))
+
+        ##### DAILY BILLINGS
+        #logging.info("GETTING DAILY BILLINGS")
+        # ABSOLUTE (122)
+        #for resp in app_layer.read_absolute_values(datetime.datetime(2020,2,1,0,0,0), datetime.datetime.now(), register='daily_billings'):
+        #    logging.info("Daily billings response {}".format(resp))
+        # INCREMENTAL (123)
+        #logging.info("LEER CURVA DESDE ABRIL")
+        #for resp in app_layer.read_incremental_values(datetime.datetime(2021, 4, 1, 0, 0, 0), datetime.datetime.now(), register='daily_billings'):
+        #    logging.info("Daily billings response {}".format(resp))
+
+        ##### DAILY BILLINGS
+        #logging.info("GETTING DAILY BILLINGS")
+        # ABSOLUTE (122)
+        #for resp in app_layer.read_absolute_values(datetime.datetime(2020,2,1,0,0,0), datetime.datetime.now(), register='daily_billings'):
+        #    logging.info("Daily billings response {}".format(resp))
+        # INCREMENTAL (123)
+        #logging.info("LEER CURVA DESDE ABRIL")
+        #for resp in app_layer.read_incremental_values(datetime.datetime(2021, 4, 18, 0, 0, 0), datetime.datetime.now(), register='profiles'):
+        #    logging.info("Daily billings response {}".format(resp))
+
+        #### SET TIME ####
+        #resp = app_layer.read_datetime()
+        #logging.info("read response read_datetime {}".format(resp.content))
+        #now = datetime.datetime.now()
+        #meter_date = resp.content.tiempo.datetime
+        #diff = (now - meter_date).total_seconds()
+        #logging.info("NOW {}".format(now))
+        #logging.info("METER DATETIME {}".format(meter_date))
+        #logging.info("DIFF {}".format(diff))
+        #resp = app_layer.set_datetime()
+        #logging.info("read response set_datetime {}".format(resp.content))
+
+        #### CONTRACTED POWERS
         #resp = app_layer.get_contracted_powers()
         #logging.info("read response contracted powers {}".format(resp.content))
         #for resp in app_layer.get_info():
         #    logging.info("read response get_info {}".format(resp))
-    except Exception:
+
+
+        #### INSTANT_VALUES_OBJECTS name or code (Extended)
+        logging.info("LEER VALORES INSTANTANEOS {}")
+        instant_objects = ['totalizadores', 'potencias', 'I_V']
+        logging.info("Get instant values")
+        resp = app_layer.ext_read_instant_values(objects=instant_objects)
+        print(resp.content)
+
+        #### PROGRAMED TARIFFS (Extended)
+        logging.info("LEER TARIFA PROGRAMADA")
+        #tariff_objects = ['special_days', 'seasons', 'latent_activation_date', 'current_period']
+        tariff_objects = ['seasons']
+        logging.info("Get programmed tariff")
+        resp = app_layer.ext_read_contract_tariff_info(register=134, objects=tariff_objects)
+        print(resp.content)
+
+    except Exception as e:
+        print(e)
         raise
     finally:
         app_layer.finish_session()
