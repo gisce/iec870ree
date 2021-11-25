@@ -196,7 +196,7 @@ class AppLayer(with_metaclass(ABCMeta)):
         #do not remove this as we have to iterate over physical layer frames.
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if resp.tipo == M_IT_TK_2.type:
+            if isinstance(resp, VariableAsdu) and resp.tipo == M_IT_TK_2.type:
                 yield resp
 
     def read_datetime(self):
