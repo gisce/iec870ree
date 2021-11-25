@@ -288,6 +288,19 @@ class AppLayer(with_metaclass(ABCMeta)):
             if resp.tipo == 140:
                 yield resp
 
+    def read_holiday_days(self, register=1):
+        # 147 Get holiday days
+        if register in CONTRACTS_REGISTERS:
+            register = CONTRACTS_REGISTERS[register]
+        else:
+            logger.error("Wrong values for register")
+            raise ValueError
+        asdu = self.create_asdu_request(C_DF_NA_2(), register)
+        resps = list(self.process_request(asdu))
+        for resp in resps:
+            if isinstance(resp, VariableAsdu) and resp.tipo == M_DF_NA_2.type:
+                return resp
+
     # Protocol extension
     def ext_read_instant_values(self, register=0, objects=['totalizadores']):
         # 162

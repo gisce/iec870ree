@@ -31,6 +31,8 @@ __all__ = [
     'M_PC_NA_2',
     'C_RM_NA_2',
     'M_RM_NA_2',
+    'C_DF_NA_2',
+    'M_DF_NA_2',
     # AMPLIACION DE PROTOCOLO
     # meter tariff conf
     'P_TA_IN_2',
@@ -115,18 +117,18 @@ SERIAL_PORT_PARAM = {
 
 # 151 response
 TARIFF_CONF_OBJECTS = {
-#    192: {
-#        'name': 'totalizadores',
-#        'object': 'TotalizadoresInstantaneos'
-#    },
+    192: {
+        'name': 'special_days',
+        'object': 'SpecialDays'
+    },
     193: {
         'name': 'seasons',
         'object': 'Seasons'
     },
-#    194: {
-#        'name': 'I_V',
-#        'object': 'IVInstantaneos'
-#    }
+    197: {
+        'name': 'current_period',
+        'object': 'CurrentPeriods'
+    }
 }
 
 
@@ -723,6 +725,41 @@ class M_RM_NA_2(BaseAppAsdu):
          self.active_contracts = contracts
 
 
+class C_DF_NA_2(BaseAppAsdu):
+    """
+    Leer Dias Festivos
+    """
+    type = 147
+    causa_tm = 5
+
+    # Register address: 134 or 135 or 136
+
+    def from_hex(self, data, cualificador_ev):
+        pass
+
+    def to_bytes(self):
+        return bytes()
+
+
+class M_DF_NA_2(BaseAppAsdu):
+    """
+    Respuesta Días Festivos
+    """
+    type = 148
+
+    def __init__(self):
+        self.valores = []
+        self.address = None
+
+    def from_hex(self, data, cualificador_ev):
+        position = 0
+        for i in range(0, cualificador_ev):
+            day = TimeA()
+            day.from_hex(data[position:position + 5])
+            position += 5
+            self.valores.append(day)
+
+
 # Protocol extension
 # Tariff configuration
 class P_TA_IN_2(BaseAppAsdu):
@@ -1098,6 +1135,33 @@ class Seasons():
         output += "Fecha activación: {}\n".format(self.fecha_activacion)
         output += "-- Temporadas END--\n"
         return output
+
+class CurrentPeriods():
+    tipo = 150
+    objeto = 197
+    length = 8
+
+    def __init__(self):
+        self.valores = None
+
+    def from_hex(self, data):
+        contrato1 = struct.unpack("B", data[0:1])[0]
+        contrato2 = struct.unpack("B", data[1:2])[0]
+        contrato3 = struct.unpack("B", data[2:3])[0]
+
+        dt = TimeA()
+        dt.from_hex(data[3:8])
+
+        self.valores = {'c1': contrato1, 'c2': contrato2, 'c3': contrato3, 'fecha': dt}
+
+        return self.length
+
+    def __repr__(self):
+        output = "\n-- PeriodosActuales BEGIN--\n"
+        output += repr(self.valores) + "\n"
+        output += "-- PeriodosActuales END--\n"
+        return output
+
 
 
 class TotalizadoresInstantaneos():
