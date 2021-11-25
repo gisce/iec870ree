@@ -98,7 +98,7 @@ class AppLayer(with_metaclass(ABCMeta)):
 
     def __init__(self):
         self.last_content_heartbeat = self.connection_start = datetime.now()
-        self.content_timeout = 900  # in seconds
+        self.set_content_timeout(300)  # in seconds
 
 
     def initialize(self, link_layer):
@@ -111,8 +111,8 @@ class AppLayer(with_metaclass(ABCMeta)):
     def get_user_data(self):
         pass
 
-    def content_timeout(self, timeout):
-        self.content_timeout = timeout
+    def set_content_timeout(self, timeout):
+        self.max_content_timeout = timeout
 
     def reset_content_received(self):
         logger.info("RESET Last Content Heartbeat, content received")
@@ -123,7 +123,7 @@ class AppLayer(with_metaclass(ABCMeta)):
         diff = (now - self.last_content_heartbeat).total_seconds()
         logger.info("Last Content Heartbeat: {} seconds".format(diff))
         logger.info("TOTAL Current Duration: {} seconds".format(self.get_connection_duration()))
-        if diff > self.content_timeout:
+        if diff > self.max_content_timeout:
             raise NoContentTimeoutException
 
     def get_connection_duration(self):
@@ -216,6 +216,7 @@ class AppLayer(with_metaclass(ABCMeta)):
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
             if resp.tipo == M_IT_TG_2.type:
+                self.reset_content_received()
                 yield resp
 
     def read_incremental_values(self, start_date, end_date, register='profiles'):
@@ -261,6 +262,7 @@ class AppLayer(with_metaclass(ABCMeta)):
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
             if resp.tipo == M_TA_VC_2.type:
+                self.reset_content_received()
                 yield resp
 
     def stored_tariff_info(self, start_date, end_date, register=1):
@@ -274,6 +276,7 @@ class AppLayer(with_metaclass(ABCMeta)):
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
             if resp.tipo == M_TA_VM_2.type:
+                self.reset_content_received()
                 yield resp
 
     def get_configuration(self):
