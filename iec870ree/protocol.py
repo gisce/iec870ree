@@ -6,6 +6,7 @@ from .base_asdu import (
 from .app_asdu import *
 from .app_asdu import INSTANT_VALUES_OBJECTS
 import math
+from datetime import datetime
 
 from six import with_metaclass
 
@@ -87,16 +88,47 @@ class ASDUDirectionUnknown(Exception):
     pass
 
 
+class NoContentTimeoutException(Exception):
+
+    def __str__(self):
+        return 'Timeout: To many Time Without Content'
+
+
 class AppLayer(with_metaclass(ABCMeta)):
+
+    def __init__(self):
+        self.last_content_heartbeat = self.connection_start = datetime.now()
+        self.content_timeout = 900  # in seconds
+
 
     def initialize(self, link_layer):
         self.link_layer = link_layer
+        self.last_content_heartbeat = datetime.now()
 
     def send_user_data(self, asdu):
         pass
 
     def get_user_data(self):
         pass
+
+    def content_timeout(self, timeout):
+        self.content_timeout = timeout
+
+    def reset_content_received(self):
+        logger.info("RESET Last Content Heartbeat, content received")
+        self.last_content_heartbeat = datetime.now()
+
+    def check_content_timeout(self):
+        now = datetime.now()
+        diff = (now - self.last_content_heartbeat).total_seconds()
+        logger.info("Last Content Heartbeat: {} seconds".format(diff))
+        logger.info("TOTAL Current Duration: {} seconds".format(self.get_connection_duration()))
+        if diff > self.content_timeout:
+            raise NoContentTimeoutException
+
+    def get_connection_duration(self):
+        now = datetime.now()
+        return (now - self.connection_start).total_seconds()
 
     def process_request(self, request_asdu):
         self.link_layer.send_frame(request_asdu)
@@ -155,6 +187,8 @@ class AppLayer(with_metaclass(ABCMeta)):
             else:
                 raise Exception('ERROR: Transmission cause unknown: {}'.format(asdu_resp.causa_tm))
 
+            self.check_content_timeout()
+
     def authenticate(self, clave_pm):
         #183
         asdu = self.create_asdu_request(C_AC_NA_2(clave_pm))
@@ -197,6 +231,7 @@ class AppLayer(with_metaclass(ABCMeta)):
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
             if isinstance(resp, VariableAsdu) and resp.tipo == M_IT_TK_2.type:
+                self.reset_content_received()
                 yield resp
 
     def read_datetime(self):
