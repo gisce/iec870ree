@@ -158,6 +158,7 @@ class AppLayer(with_metaclass(ABCMeta)):
             yield asdu_resp
 
             if not isinstance(asdu_resp, VariableAsdu):
+                self.check_content_timeout()
                 continue
             if asdu_resp.causa_tm == 0x05 and asdu_resp.tipo in [
                 M_TA_VC_2.type, M_TA_VM_2.type, M_IT_TK_2.type, M_IT_TG_2.type,
