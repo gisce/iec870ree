@@ -9,7 +9,11 @@ import logging
 import iec870ree.ip
 import iec870ree.protocol
 import datetime
-
+import click
+try:
+    from urllib.parse import urlparse
+except:
+    from urlparse import urlparse
 
 def run_example(ip, port, der, dir_pm, clave_pm):
     try:
@@ -86,18 +90,22 @@ def run_example(ip, port, der, dir_pm, clave_pm):
 
 
         #### INSTANT_VALUES_OBJECTS name or code (Extended)
-        logging.info("LEER VALORES INSTANTANEOS {}")
-        instant_objects = ['totalizadores', 'potencias', 'I_V']
-        logging.info("Get instant values")
-        resp = app_layer.ext_read_instant_values(objects=instant_objects)
-        print(resp.content)
+        # logging.info("LEER VALORES INSTANTANEOS {}")
+        # instant_objects = ['totalizadores', 'potencias', 'I_V']
+        # logging.info("Get instant values")
+        # resp = app_layer.ext_read_instant_values(objects=instant_objects)
+        # print(resp.content)
+        #
+        # #### PROGRAMED TARIFFS (Extended)
+        # logging.info("LEER TARIFA PROGRAMADA")
+        # #tariff_objects = ['special_days', 'seasons', 'latent_activation_date', 'current_period']
+        # tariff_objects = ['seasons']
+        # logging.info("Get programmed tariff")
+        # resp = app_layer.ext_read_contract_tariff_info(register=134, objects=tariff_objects)
+        # print(resp.content)
 
-        #### PROGRAMED TARIFFS (Extended)
-        logging.info("LEER TARIFA PROGRAMADA")
-        #tariff_objects = ['special_days', 'seasons', 'latent_activation_date', 'current_period']
-        tariff_objects = ['seasons']
-        logging.info("Get programmed tariff")
-        resp = app_layer.ext_read_contract_tariff_info(register=134, objects=tariff_objects)
+        logging.info("LEER DIAS FESTIVOS")
+        resp = app_layer.read_holiday_days()
         print(resp.content)
 
     except Exception as e:
@@ -108,39 +116,32 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         physical_layer.disconnect()
         sys.exit(1)
 
-    
-if __name__ == "__main__":
+
+def get_connection(url):
+    url = urlparse(url)
+    # PATH is TM connection params in format DER,PM,PWD
+    der, pm, pwd = url.path.replace('/', '').split(',')
+    host =url.hostname
+    port =url.port
+
+    logging.info('Started {} {} {} {} {}'.format(host, port, der, pm, pwd))
+    return {'host': url.hostname, 'port': url.port, 'der': der,'dir_pm': pm, 'pwd': pwd}
+
+@click.command()
+@click.option('-u', '--url',
+              help='URL to connect to meter (server:port/DER,PM,PASS)',
+              type=str, default='iec://127.0.0.1:2000/1,1,1', show_default=True)
+def connect_meter(url):
     logging.basicConfig(level=logging.INFO)
-    argv = sys.argv[1:]
-    try:
-        argv = sys.argv[1:]
-        opts, args = getopt.getopt(argv,"i:hp:d:r:c:",
-                                   ["ip=", "port=",
-                                    "der=", "dir_pm=", "clave_pm="])
-    except getopt.GetoptError:
-       logging.error('wrong command')
-       sys.exit(2)
+    conn_data = get_connection(url)
 
-    ip = None
-    port = None
-    der = None
-    dir_pm = None
-    clave_pm = None
-    for opt, arg in opts:
-        if opt == '-h':
-          logging.error("help not implemented")
-          sys.exit()
-        elif opt in ("-p", "--port"):
-          port = int(arg)
-        elif opt in ("-i", "--ip"):
-          ip = arg
-        elif opt in ("-d", "--der"):
-          der = int(arg)
-        elif opt in ("-r", "--dir_pm"):
-          dir_pm = int(arg)
-        elif opt in ("-c", "--clave_pm"):
-          clave_pm = int(arg)
+    run_example(
+        conn_data['host'],
+        int(conn_data['port']),
+        int(conn_data['der']),
+        int(conn_data['dir_pm']),
+        int(conn_data['pwd'])
+    )
 
-    logging.info('Started {} {} {} {} {}'.format(ip, port,
-                                                 der, dir_pm, clave_pm))
-    run_example(ip, port, der, dir_pm, clave_pm)
+if __name__ == "__main__":
+    connect_meter()
