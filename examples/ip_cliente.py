@@ -21,6 +21,7 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         link_layer = iec870ree.protocol.LinkLayer(der, dir_pm)
         link_layer.initialize(physical_layer)
         app_layer = iec870ree.protocol.AppLayer()
+        app_layer.set_content_timeout(300)
         app_layer.initialize(link_layer)
 
         physical_layer.connect()
@@ -60,15 +61,15 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         #for resp in app_layer.read_incremental_values(datetime.datetime(2021, 4, 1, 0, 0, 0), datetime.datetime.now(), register='daily_billings'):
         #    logging.info("Daily billings response {}".format(resp))
 
-        ##### DAILY BILLINGS
+        ##### CURVES
         #logging.info("GETTING DAILY BILLINGS")
         # ABSOLUTE (122)
-        #for resp in app_layer.read_absolute_values(datetime.datetime(2020,2,1,0,0,0), datetime.datetime.now(), register='daily_billings'):
+        #for resp in app_layer.read_absolute_values(datetime.datetime(2020,2,1,0,0,0), datetime.datetime.now(), register='profiles'):
         #    logging.info("Daily billings response {}".format(resp))
-        # INCREMENTAL (123)
-        #logging.info("LEER CURVA DESDE ABRIL")
-        #for resp in app_layer.read_incremental_values(datetime.datetime(2021, 4, 18, 0, 0, 0), datetime.datetime.now(), register='profiles'):
-        #    logging.info("Daily billings response {}".format(resp))
+        #INCREMENTAL (123)
+        logging.info("LEER CURVA")
+        for resp in app_layer.read_incremental_values(datetime.datetime(2021, 4, 18, 0, 0, 0), datetime.datetime.now(), register='profiles'):
+            logging.info("Profile response {}".format(resp))
 
         #### SET TIME ####
         #resp = app_layer.read_datetime()
