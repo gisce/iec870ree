@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class Ip(PhysicalLayer):
     """IP Physical Layer"""
 
-    def __init__(self, addr):
+    def __init__(self, addr, waiting=5):
         """Create an IP Physical Layer.
         :addr tuple: Address tuple (host, port)
         """
@@ -30,6 +30,7 @@ class Ip(PhysicalLayer):
         self.alive = threading.Event()
         self.queue = queue.Queue()
         self.thread = threading.Thread(target=self.read_port)
+        self.waiting = waiting
         logger.debug("New IP with addr %s", addr)
 
     def connect(self):
@@ -40,8 +41,8 @@ class Ip(PhysicalLayer):
         self.connected = True
         self.alive.set()
         self.thread.start()
-        logger.debug("Connection with %s created", self.addr)
-        time.sleep(5)
+        logger.debug("Connection with %s created, wait %s", self.addr, self.waiting)
+        time.sleep(self.waiting)
 
     def disconnect(self):
         """Disconnects
