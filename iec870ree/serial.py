@@ -16,7 +16,6 @@ class SerialException(Exception):
 
 
 class Serial(PhysicalLayer):
-    CONNECTED_WORDS = ["CONNECT", "REL ASYNC"]
 
     def __init__(self, serial_port='/dev/ttyUSB0'):
         self.serial_port = serial_port
@@ -56,25 +55,6 @@ class Serial(PhysicalLayer):
         self.dthread = threading.Thread(target=self.read_port,
                                         args=(self.queue,))
         self.dthread.start()
-
-    def waitforconnect(self):
-        max_tries = 40
-        for i in range(max_tries):
-            try:
-                i = self.queue.get(False, 1)
-                logger.info("got message> " + i)
-                for word in Serial.CONNECTED_WORDS:
-                    if word in i:
-                        logger.info("CONNECTED!!!!!!!!!!!!!!!!!!!!")
-                        self.data_mode = True
-                        self.queue.task_done()
-                        time.sleep(5)  # everything smooth in read thread
-                        return
-                self.queue.task_done()
-            except queue.Empty:
-                logger.info("nothing yet...")
-                time.sleep(1)
-        raise SerialException("Error Waiting for connection")
 
     def disconnect(self):
         if not self.connected:
