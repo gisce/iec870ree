@@ -20,7 +20,6 @@ class Serial(PhysicalLayer):
     def __init__(self, serial_port='/dev/ttyUSB0'):
         self.serial_port = serial_port
         self.connected = False
-        self.data_mode = False
         self.queue = queue.Queue()
  
     def connect(self):
@@ -61,26 +60,17 @@ class Serial(PhysicalLayer):
             return
 
         try:
-            if self.data_mode:
-                self.data_mode = False
             self.sport.close()
         finally:
-            self.data_mode = False
             self.connected = False
 
     def send_byte(self, bt):
-        if not self.data_mode:
-            raise SerialException("serial not in datamode")
         self.write(bytes([bt]))
 
     def send_bytes(self, bt):
-        if not self.data_mode:
-            raise SerialException("serial not in datamode")
         self.write(bt)
         
     def get_byte(self, timeout = 60):
-        if not self.data_mode:
-            raise SerialException("serial not in datamode")
         return self.queue.get(True, timeout)
 
     def write(self, value):
@@ -101,15 +91,7 @@ class Serial(PhysicalLayer):
 
             for b in response:
                 # if not self.data_mode and (b == 0x0A or b == 0x0D):
-                if not self.data_mode:
-                    # answer with the line
-                    buffer.append(b)
-                    if (b == 0x0A):
-                        logger.info("R-" + buffer.decode("ascii"))
-                        read_queue.put(buffer.decode("ascii"))
-                        del buffer[:]
-                else:
-                    read_queue.put(b)
+                read_queue.put(b)
 
         logger.info("read thread END")
 

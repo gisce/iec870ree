@@ -39,7 +39,7 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
     try:
         argv = sys.argv[1:]
-        opts, args = getopt.getopt(argv,"hp:n:d:p:c:",
+        opts, args = getopt.getopt(argv,"t:d:p:c:",
                                    ["port=", "der=", "dir_pm=",
                                    "clave_pm="])
     except getopt.GetoptError:
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         if opt == '-h':
           logging.error("help not implemented")
           sys.exit()
-        elif opt in ("-p", "--port"):
+        elif opt in ("-t", "--port"):
           port = arg
         elif opt in ("-d", "--der"):
           der = int(arg)
