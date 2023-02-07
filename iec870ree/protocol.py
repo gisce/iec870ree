@@ -429,18 +429,31 @@ class LinkLayer(with_metaclass(ABCMeta)):
         logger.info("received frame {}".format(frame))
         return frame
 
+    def empty_buffer(self):
+        while 1:
+            try:
+                self.physical_layer.get_byte(1)
+            except Exception as error:
+                logger.info("Buffer emptied. retrying")
+                break
+
     def link_state_request(self, retries=None):
         resp = None
         asdu = self.create_link_state_asdu()
+        logger.info("Send link state Retries {}".format(retries))
         self.send_frame(asdu)
         try:
             resp = self.get_frame()
         except Exception as e:
+            logger.info("Link State Exception: {}".format(e))
             if retries:
                 retries -= 1
-                self.link_state_request(retries=retries)
+                # empty buffer
+                self.empty_buffer()
+                resp = self.link_state_request(retries=retries)
         if resp is None:
             raise ProtocolException("Link state request didn't get response")
+        return resp
 
     def create_link_state_asdu(self):
         asdu = FixedAsdu()
