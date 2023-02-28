@@ -14,6 +14,11 @@ try:
     from urllib.parse import urlparse
 except:
     from urlparse import urlparse
+from pytz import timezone
+
+
+LOCAL_TZ = timezone('Europe/Madrid')
+
 
 def run_example(ip, port, der, dir_pm, clave_pm):
     try:
@@ -74,7 +79,7 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         #### SET TIME ####
         #resp = app_layer.read_datetime()
         #logging.info("read response read_datetime {}".format(resp.content))
-        #now = datetime.datetime.now()
+        #now = LOCAL_TZ.localize(datetime.datetime.now())
         #meter_date = resp.content.tiempo.datetime
         #diff = (now - meter_date).total_seconds()
         #logging.info("NOW {}".format(now))

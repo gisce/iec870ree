@@ -228,6 +228,8 @@ class C_CS_TA_2(BaseAppAsdu):
     data_length = 0x06
 
     def __init__(self, sincrotime=datetime.datetime.now()):
+        if sincrotime and not sincrotime.tzinfo:
+            TIMEZONE.localize(sincrotime)
         self.tiempo = TimeB(sincrotime)
 
     def from_hex(self, data, cualificador_ev):
