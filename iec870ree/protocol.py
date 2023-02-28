@@ -493,7 +493,7 @@ class LinkLayer(with_metaclass(ABCMeta)):
 
     @property
     def fcb(self):
-        self._fcb += 1 % 2
+        self._fcb = (self._fcb + 1) % 2
         return self._fcb
 
 
