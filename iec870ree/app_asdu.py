@@ -4,6 +4,11 @@ import struct
 import datetime
 from pytz import timezone
 from collections import namedtuple
+try:
+    from collections import Iterable
+except:
+    import collections.abc
+    collections.Iterable = collections.abc.Iterable
 
 from six import with_metaclass
 
