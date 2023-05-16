@@ -78,7 +78,7 @@ InstantTotals = namedtuple('InstantTotals', [
 
 InstantPower = namedtuple('InstantPower', [
         'fase', 'potencia_activa', 'potencia_reactiva', 'factor_potencia',
-        'is_exporting_activa', 'is_exporting_reactiva', 'valid'
+        'is_exporting_activa', 'reactive_quadrant', 'valid'
     ]
 )
 
@@ -1228,12 +1228,12 @@ class PotenciaInstantanea():
             potencia_reactiva = bitstring.BitArray(reversed(reversed_bits.read(24))).uint     # kVAr
             factor_potencia = bitstring.BitArray(reversed(reversed_bits.read(10))).uint       # cos phi in millis
             is_exporting_activa = bitstring.BitArray(reversed(reversed_bits.read(1))).bool    # 0 importada/ 1 exportada
-            is_exporting_reactiva = bitstring.BitArray(reversed(reversed_bits.read(1))).bool  # 0 Q1/Q4 / 1 Q2/Q3
+            reactive_quadrant = bitstring.BitArray(reversed(reversed_bits.read(1))).bool      # 0 Q1/Q2 / 1 Q3/Q4
             bitstring.BitArray(reversed(reversed_bits.read(3)))                               # not used
             invalid = bitstring.BitArray(reversed(reversed_bits.read(1))).bool                # 0 valid/ 1 invalid
             ip = InstantPower(
                 name, potencia_activa, potencia_reactiva, factor_potencia / 1000.0,
-                is_exporting_activa, is_exporting_reactiva, not invalid
+                is_exporting_activa, reactive_quadrant, not invalid
             )
 
             self.valores.append(ip)
