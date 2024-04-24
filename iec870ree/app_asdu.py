@@ -273,6 +273,7 @@ class P_MP_NA_2(BaseAppAsdu):
     data_length = 0x06
 
     def __init__(self):
+        self.ano_standard = None
         self.codigo_fabricante = None
         self.codigo_equipo = None
 
@@ -280,6 +281,8 @@ class P_MP_NA_2(BaseAppAsdu):
         return bytes()
 
     def from_hex(self, data, cualificador_ev):
+        std_date = struct.unpack("B", data[0:1])[0]
+        self.ano_standard = '{}/{}'.format(std_date & 15, ((std_date & 240) >> 4) + 2000)
         self.codigo_fabricante = struct.unpack("B", data[1:2])[0]
         self.codigo_equipo = struct.unpack("I", data[2:6])[0]
 
