@@ -232,7 +232,9 @@ class C_CS_TA_2(BaseAppAsdu):
     causa_tm = 6
     data_length = 0x06
 
-    def __init__(self, sincrotime=datetime.datetime.now()):
+    def __init__(self, sincrotime=None):
+        if sincrotime is None:
+            sincrotime = datetime.datetime.now()
         if sincrotime and not sincrotime.tzinfo:
             TIMEZONE.localize(sincrotime)
         self.tiempo = TimeB(sincrotime)
