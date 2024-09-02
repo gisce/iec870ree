@@ -232,7 +232,9 @@ class C_CS_TA_2(BaseAppAsdu):
     causa_tm = 6
     data_length = 0x06
 
-    def __init__(self, sincrotime=datetime.datetime.now()):
+    def __init__(self, sincrotime=None):
+        if sincrotime is None:
+            sincrotime = datetime.datetime.now()
         if sincrotime and not sincrotime.tzinfo:
             TIMEZONE.localize(sincrotime)
         self.tiempo = TimeB(sincrotime)
@@ -332,8 +334,13 @@ class C_CI_NX_2(BaseAppAsdu):
     data_length = 0x06
     causa_tm = 6
 
-    def __init__(self, start_date=datetime.datetime.now(),
-                 end_date=datetime.datetime.now()):
+    def __init__(self, start_date=None, end_date=None):
+
+        if start_date is None:
+            start_date = datetime.datetime.now()
+        if end_date is None:
+            start_date = datetime.datetime.now()
+
         self.primer_integrado = 1
         self.ultimo_integrado = 8
         self.tiempo_inicial = TimeA(start_date)
@@ -397,8 +404,13 @@ class C_TA_VM_2(BaseAppAsdu):
     causa_tm = 6
 
     # Register address: 134 or 135 or 136
-    def __init__(self, start_date=datetime.datetime.now(),
-                 end_date=datetime.datetime.now()):
+    def __init__(self, start_date=None, end_date=None):
+
+        if start_date is None:
+            start_date = datetime.datetime.now()
+        if end_date is None:
+            start_date = datetime.datetime.now()
+
         self.start_date = TimeA(start_date)
         self.end_date = TimeA(end_date)
 
@@ -538,8 +550,13 @@ class C_CB_UN_2(BaseAppAsdu):
     data_length = 0x06
     causa_tm = 6
 
-    def __init__(self, start_date=datetime.datetime.now(),
-                 end_date=datetime.datetime.now(), adr_object=10):
+    def __init__(self, start_date=None, end_date=None, adr_object=10):
+
+        if start_date is None:
+            start_date = datetime.datetime.now()
+        if end_date is None:
+            start_date = datetime.datetime.now()
+
         self.start_date = TimeA(start_date)
         self.end_date = TimeA(end_date)
         self.object = adr_object
@@ -899,7 +916,11 @@ class R_IN_VA_2(BaseAppAsdu):
 
 class TimeBase():
 
-    def __init__(self, fecha=datetime.datetime.now()):
+    def __init__(self, fecha=None):
+
+        if fecha is None:
+            fecha = datetime.datetime.now()
+
         locfecha = fecha
         if not fecha.tzinfo:
             locfecha = TIMEZONE.localize(fecha)
