@@ -40,6 +40,15 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         resp = app_layer.get_info()
         logging.info("read response get_info{}".format(resp.content))
  
+        event_groups = (52,53, 54, 55, 128, 129, 131, 132, 133) 
+
+        for event_group in event_groups:
+            try:
+                for resp in app_layer.read_events(event_group):
+                    logging.info("Get EVENTS {}: {}".format(event_group, resp.content))
+            except:
+                logging.info("WARNING: event {} not available".format(event_group)) 
+
         ##### CURRENT MEASURE (133)
         #logging.info("LEER CIERRES ACTUALES")
         #for resp in app_layer.current_tariff_info(register=1):
@@ -72,9 +81,9 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         #for resp in app_layer.read_absolute_values(datetime.datetime(2020,2,1,0,0,0), datetime.datetime.now(), register='profiles'):
         #    logging.info("Daily billings response {}".format(resp))
         #INCREMENTAL (123)
-        logging.info("LEER CURVA")
-        for resp in app_layer.read_incremental_values(datetime.datetime(2021, 4, 18, 0, 0, 0), datetime.datetime.now(), register='profiles'):
-            logging.info("Profile response {}".format(resp))
+        #logging.info("LEER CURVA")
+        #for resp in app_layer.read_incremental_values(datetime.datetime(2021, 4, 18, 0, 0, 0), datetime.datetime.now(), register='profiles'):
+        #    logging.info("Profile response {}".format(resp))
 
         #### SET TIME ####
         #resp = app_layer.read_datetime()
@@ -103,16 +112,16 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         # print(resp.content)
         #
         # #### PROGRAMED TARIFFS (Extended)
-        # logging.info("LEER TARIFA PROGRAMADA")
-        # #tariff_objects = ['special_days', 'seasons', 'latent_activation_date', 'current_period']
-        # tariff_objects = ['seasons']
+        #logging.info("LEER TARIFA PROGRAMADA")
+        #tariff_objects = ['special_days', 'seasons', 'latent_activation_date', 'current_period']
+        #tariff_objects = ['special_days']
         # logging.info("Get programmed tariff")
-        # resp = app_layer.ext_read_contract_tariff_info(register=134, objects=tariff_objects)
-        # print(resp.content)
+        #resp = app_layer.ext_read_contract_tariff_info(register=134, objects=tariff_objects)
+        #print(resp.content)
 
-        logging.info("LEER DIAS FESTIVOS")
-        resp = app_layer.read_holiday_days()
-        print(resp.content)
+        #logging.info("LEER DIAS FESTIVOS")
+        #resp = app_layer.read_holiday_days()
+        #print(resp.content)
 
     except Exception as e:
         print(e)
