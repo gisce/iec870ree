@@ -21,6 +21,8 @@ __all__ = [
     'C_FS_NA_2',
     'C_TI_NA_2',
     'C_RD_NA_2',
+    'C_SP_NB_2',
+    'M_SP_TA_2',
     'M_IT_TG_2',
     'M_IT_TK_2',
     'M_TI_TA_2',
@@ -56,6 +58,8 @@ BillingRegister = namedtuple('BillingRegister', ['address', 'active_abs',
 
 IntegratedTotals = namedtuple('IntegratedTotals', ['address', 'total', 'quality'
                               , 'datetime'])
+
+SingleEvent = namedtuple('SingleEvent', ['SPA', 'SPQ', 'SPI', 'date'])
 
 ContractedPower = namedtuple('ContractedPower', ['address', 'power'])
 
@@ -265,6 +269,63 @@ class C_RD_NA_2(BaseAppAsdu):
 
     def from_hex(self, data, cualificador_ev):
         pass
+
+
+class C_SP_NB_2(BaseAppAsdu):
+    """
+    Leer eventos (single point) por fechas
+    """
+    type = 102
+    causa_tm = 6
+    data_length = 0x0A
+
+    def __init__(self, date_from=None, date_to=None):
+
+        if date_from is None:
+            date_from = datetime.datetime.now()
+        if date_to is None:
+            date_to = datetime.datetime.now()
+
+        self.date_from = TimeA(TIMEZONE.localize(date_from))
+        self.date_to = TimeA(TIMEZONE.localize(date_to))
+
+    def to_bytes(self):
+        response = bytearray()
+        response.extend(self.date_from.to_bytes())
+        response.extend(self.date_to.to_bytes())
+
+        return response
+
+    def from_hex(self, data, cualificador_ev):
+        self.date_from = TimeA()
+        self.date_from.from_hex(data[0:5])
+        self.date_to = TimeA()
+        self.date_to.from_hex(data[5:10])
+
+
+class M_SP_TA_2(BaseAppAsdu):
+    """
+    Listado eventos (single point) con etiqueta de tiempo
+    """
+    type = 1
+    causa_tm = 5
+
+    def __init__(self):
+        self.valores = []
+
+    def to_bytes(self):
+        return bytes()
+
+    def from_hex(self, data, cualificador_ev):
+        for i in range(0, cualificador_ev):
+            position = i * 9
+            SPA = struct.unpack("B", data[position:position+1])[0]
+            SPQI = struct.unpack("B", data[position+1:position+2])[0]
+            SPQ = (SPQI & 0xF7) >> 1
+            SPI = (SPQI & 0x01)
+            tiempo = TimeB()
+            tiempo.from_hex(data[position+2:position+10])
+            self.valores.append(SingleEvent(SPA, SPQ, SPI, tiempo))
 
 
 class P_MP_NA_2(BaseAppAsdu):
