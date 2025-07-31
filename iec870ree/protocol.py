@@ -4,7 +4,7 @@ from .base_asdu import (
     AsduParser, FixedAsdu, VariableAsdu
 )
 from .app_asdu import *
-from .app_asdu import INSTANT_VALUES_OBJECTS
+from .app_asdu import INSTANT_VALUES_OBJECTS, REGISTRADOR_RM2_OBJECTS
 import math
 from datetime import datetime
 
@@ -40,6 +40,9 @@ REQUESTS_TYPES = {
 
 
 EXT_INSTANT_OBJECTS = dict([(v['name'], k) for k, v in INSTANT_VALUES_OBJECTS.items()])
+
+
+EXT_RM2_OBJECTS = dict([(v['name'], k) for k, v in REGISTRADOR_RM2_OBJECTS.items()])
 
 
 EXT_TARIFF_OBJECTS = {
@@ -338,6 +341,28 @@ class AppLayer(with_metaclass(ABCMeta)):
         resps = list(self.process_request(asdu))
         for resp in resps:
             if isinstance(resp, VariableAsdu) and resp.tipo == M_DF_NA_2.type:
+                return resp
+
+    # Protocol extension
+    def ext_read_rm2_values(self, register=0, objects=['traforatio']):
+        # 157
+        object_codes = []
+        for object in objects:
+            # You may pass either name or value
+            if object in EXT_RM2_OBJECTS.keys():
+                object_codes.append(EXT_RM2_OBJECTS[object])
+            elif object in EXT_RM2_OBJECTS.values():
+                object_codes.append(object)
+            else:
+                logger.error("Wrong values for required objects: {}".format(objects))
+                raise ValueError
+
+        object_codes = list(set(object_codes))
+        asdu = self.create_asdu_request(P_RM_R2_2(object_codes), register)
+        resps = list(self.process_request(asdu))
+
+        for resp in resps:
+            if isinstance(resp, VariableAsdu): # and resp.tipo == P_TA_IN_2.type:
                 return resp
 
     # Protocol extension

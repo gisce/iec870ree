@@ -42,6 +42,9 @@ __all__ = [
     # meter tariff conf
     'P_TA_IN_2',
     'R_TA_IN_2',
+    # RM_2
+    'P_RM_R2_2',
+    'R_RM_R2_2',
     # instant value
     'P_IN_VA_2',
     'R_IN_VA_2',
@@ -70,6 +73,10 @@ Day = namedtuple('Day', [
         'tipo', 'horas'
     ]
 )
+
+TrafoRatioVals = namedtuple('TrafoRatioVals', [
+    'primary', 'secondary'
+])
 
 InstantTotals = namedtuple('InstantTotals', [
     'ai', 'ai_val', 'ae', 'ae_val',
@@ -151,6 +158,49 @@ INSTANT_VALUES_OBJECTS = {
         'name': 'I_V',
         'object': 'IVInstantaneos'
     }
+}
+
+REGISTRADOR_RM2_OBJECTS = {
+    192: {
+        'name': 'battery',
+        'object': 'Battery'
+    },
+    193: {
+        'name': 'timesavingchange',
+        'object': 'TimeSavingChange'
+    },
+    194: {
+        'name': 'minclosetime',
+        'object': 'MinCloseTime'
+    },
+    195: {
+        'name': 'alarm',
+        'object': 'Alarm'
+    },
+    196: {
+        'name': 'voltagefault',
+        'object': 'VoltageFault'
+    },
+    197: {
+        'name': 'curveperiod',
+        'object': 'CurvePeriod'
+    },
+    198: {
+        'name': 'traforatio',
+        'object': 'TrafoRatio'
+    },
+    199: {
+        'name': 'clocksincro',
+        'object': 'ClockSincro'
+    },
+    200: {
+        'name': 'programid',
+        'object': 'ProgramId'
+    },
+    201: {
+        'name': 'buttonclosing',
+        'object': 'ButtonClosing'
+    },
 }
 
 
@@ -853,6 +903,83 @@ class R_TA_IN_2(BaseAppAsdu):
     def to_bytes(self):
         pass
 
+# Registrator RM_2
+class P_RM_R2_2(BaseAppAsdu):
+    """
+    Petición valores configuración Registrador de medida 2
+    direccion registro: 0
+    direcciones objeto (lista):
+        192: Reset de Bateria
+        193: Cambio de hora I/V Automático
+        194: Tiempo mínimo entre cierres
+        195: Estado Alarma Crítica/Alarma No Crítica
+        196: Fallo de Tensión
+        197: Período de Curva de Carga
+        198: Relación de transformación
+        199: Sincronismo de reloj
+        200: Identificado programación
+        201: Cierre pulsador
+    """
+    type = 156
+    causa_tm = 5
+
+
+    def __init__(self, objetos=[198]):
+        self.objetos = objetos
+        self.data_length = len(self.objetos) * 0x06
+
+
+    def from_hex(self, data, cualificador_ev):
+        pass
+
+
+    def to_bytes(self):
+        response = bytearray()
+        for objeto in self.objetos:
+            response.extend(struct.pack("B", objeto))
+        return response
+
+
+    @property
+    def length(self):
+        return 0x09 + len(self.objetos)
+
+
+class R_RM_R2_2(BaseAppAsdu):
+    """
+    Respuesta valores configuración Registrador de medida 2
+    direccion registro: 0
+    direcciones objeto (lista):
+        192: Reset de Bateria
+        193: Cambio de hora I/V Automático
+        194: Tiempo mínimo entre cierres
+        195: Estado Alarma Crítica/Alarma No Crítica
+        196: Fallo de Tensión
+        197: Período de Curva de Carga
+        198: Relación de transformación
+        199: Sincronismo de reloj
+        200: Identificado programación
+        201: Cierre pulsador
+    """
+    type = 157
+    causa_tm = 5
+
+    def __init__(self):
+        self.valores = []
+
+    def from_hex(self, data, cualificador_ev):
+        pos = 0
+        for obj_idx in range(cualificador_ev):
+            object_id = struct.unpack("B", data[pos:pos+1])[0]
+            pos +=1
+            object_class = globals()[REGISTRADOR_RM2_OBJECTS[object_id]['object']]
+            the_object = object_class()
+            the_object.from_hex(data[pos:pos + the_object.length])
+            self.valores.append(the_object)
+            pos += the_object.length
+
+    def to_bytes(self):
+        pass
 
 # Instant Values
 class P_IN_VA_2(BaseAppAsdu):
@@ -1193,6 +1320,281 @@ class CurrentPeriods():
         output += "-- PeriodosActuales END--\n"
         return output
 
+
+class Battery():
+    tipo = 157
+    objeto = 192
+    length = 1
+
+    def __init__(self):
+        self.valores = None
+
+    def from_hex(self, data):
+        battery = struct.unpack("B", data[0:1])[0]
+
+        self.valores = battery
+
+        return self.valores
+
+    def __repr__(self):
+        output = "\n-- Battery BEGIN--\n"
+        output += repr(self.valores) + " % \n"
+        output += "-- Battery END--\n"
+        return output
+
+
+class TimeSavingChange():
+    tipo = 157
+    objeto = 193
+    length = 1
+
+    def __init__(self):
+        self.tsbyte = 0
+        self.valores = None
+
+    def from_hex(self, data):
+        tsbyte = struct.unpack("B", data[0:1])[0]
+
+        # 1: No hi ha calcul automàtic
+        # 2: Calcul automàtic
+        self.tsbyte = tsbyte
+        self.valores = (tsbyte & 0x03) > 1
+
+        return self.valores
+
+    def __repr__(self):
+        output = "\n-- Automatic Saving Time Change BEGIN--\n"
+        output += " * Automatic Change: {} ({})\n".format(self.valores, self.tsbyte)
+        output += "-- Automatic Saving Time Change END--\n"
+        return output
+
+
+class MinCloseTime():
+    tipo = 157
+    objeto = 194
+    length = 1
+
+    def __init__(self):
+        self.valores = None
+
+    def from_hex(self, data):
+        self.valores = struct.unpack("B", data[0:1])[0]
+
+        return self.valores
+
+    def __repr__(self):
+        output = "\n-- Min Time Closes BEGIN--\n"
+        output += " * Min Time Between Closes [min]: {} \n".format(self.valores)
+        output += "-- Min Time Closes END--\n"
+        return output
+
+
+class Alarm():
+    tipo = 157
+    objeto = 195
+    length = 2
+
+    def __init__(self):
+        self.critic_alarm_active = 0
+        self.non_critic_alarm_active = 0
+        self.valores = None
+
+    def from_hex(self, data):
+
+        self.critic_alarm_active = struct.unpack("B", data[0:1])[0]
+        self.non_critic_alarm_active = struct.unpack("B", data[1:2])[0]
+
+        self.valores = [
+            (self.critic_alarm_active & 0x03) > 1 ,
+            (self.non_critic_alarm_active & 0x03) > 1
+        ]
+
+        return self.valores
+
+    def __repr__(self):
+        output = "\n-- Alarm BEGIN--\n"
+        output += " * Critic Alarm: {} ({})\n".format(
+            self.valores[0], self.critic_alarm_active
+        )
+        output += " * Non Critic Alarm: {} ({})\n".format(
+            self.valores[1], self.non_critic_alarm_active
+        )
+        output += "-- Alarm END--\n"
+        return output
+
+
+class VoltageFault():
+    tipo = 157
+    objeto = 196
+    length = 3
+
+    def __init__(self):
+        self.phase1_voltage_fault = 0
+        self.phase2_voltage_fault = 0
+        self.phase3_voltage_fault = 0
+        self.valores = None
+
+    def from_hex(self, data):
+
+        self.phase1_voltage_fault = struct.unpack("B", data[0:1])[0]
+        self.phase2_voltage_fault = struct.unpack("B", data[1:2])[0]
+        self.phase3_voltage_fault = struct.unpack("B", data[2:3])[0]
+
+        self.valores = [
+            (self.phase1_voltage_fault & 0x03) > 1 ,
+            (self.phase2_voltage_fault & 0x03) > 1,
+            (self.phase3_voltage_fault & 0x03) > 1,
+        ]
+
+        return self.valores
+
+    def __repr__(self):
+        output = "\n-- Voltage Fault BEGIN --\n"
+        output += " * Phase 1 Voltage Fault: {} ({})\n".format(
+            self.valores[0], self.phase1_voltage_fault
+        )
+        output += " * Phase 2 Voltage Fault: {} ({})\n".format(
+            self.valores[1], self.phase2_voltage_fault
+        )
+        output += " * Phase 3 Voltage Fault: {} ({})\n".format(
+            self.valores[2], self.phase3_voltage_fault
+        )
+        output += "-- Voltage Fault END--\n"
+        return output
+
+
+class CurvePeriod():
+    tipo = 157
+    objeto = 197
+    length = 2
+
+    def __init__(self):
+        self.period_1 = 0
+        self.period_2 = 0
+        self.valores = None
+
+    def from_hex(self, data):
+
+        self.period_1 = struct.unpack("B", data[0:1])[0]
+        self.period_2 = struct.unpack("B", data[1:2])[0]
+
+        self.valores = [
+            self.period_1 ,
+            self.period_2
+        ]
+
+        return self.valores
+
+    def __repr__(self):
+        output = "\n-- Curve Period BEGIN--\n"
+        output += " * Curve Period 1 [min]: {}\n".format(self.valores[0])
+        output += " * Curve Period 2 [min]: {}\n".format(self.valores[1])
+        output += "-- Curve Period END--\n"
+        return output
+
+
+class TrafoRatio():
+    tipo = 157
+    objeto = 198
+    length = 16
+
+    def __init__(self):
+        self.valores = None
+
+    def from_hex(self, data):
+        primary_v_dV = struct.unpack("I", data[0:4])[0]
+        secondary_v_dV = struct.unpack("I", data[4:8])[0]
+        primary_i_dA = struct.unpack("I", data[8:12])[0]
+        secondary_i_dA = struct.unpack("I", data[12:16])[0]
+
+        self.valores = [
+            TrafoRatioVals(primary_v_dV, secondary_v_dV),
+            TrafoRatioVals(primary_i_dA, secondary_i_dA),
+        ]
+
+        return self.valores
+
+    def __repr__(self):
+        output = "\n-- Trafo Ratio BEGIN--\n"
+        output += " * Voltage (dV)\n"
+        ratio = self.valores[0]
+        output += repr(ratio) + " {}/{} ".format(ratio[0], ratio[1]) + "\n"
+        output += "* Current (dA)\n"
+        ratio = self.valores[1]
+        output += repr(ratio) + " {}/{} ".format(ratio[0], ratio[1]) + "\n"
+        output += "-- Trafo Ratio END--\n"
+        return output
+
+class ClockSincro():
+    tipo = 157
+    objeto = 199
+    length = 1
+
+    def __init__(self):
+        self.clocksincro = None
+        self.valores = None
+
+    def from_hex(self, data):
+        self.clocksincro_value = struct.unpack("B", data[0:1])[0]
+        clock_source = (self.clocksincro_value & 0x03) > 1 and 'quartz' or 'network'
+
+        self.valores = clock_source
+
+        return self.valores
+
+    def __repr__(self):
+        output = "\n-- Clock Sincro BEGIN--\n"
+        output += "{} ({})\n".format(self.valores, self.clocksincro_value)
+        output += "-- Clock Sincro END--\n"
+        return output
+
+
+class ProgramId():
+    tipo = 157
+    objeto = 200
+    length = 25
+
+    def __init__(self):
+        self.bytes = []
+        self.valores = None
+
+    def from_hex(self, data):
+        for i in range(0, 25):
+            self.bytes += chr(struct.unpack("B", data[i:i+1])[0])
+
+        self.valores = self.bytes
+
+        return self.valores
+
+    def __repr__(self):
+        output = "\n-- Program Id BEGIN--\n"
+        output += "{}\n".format(self.valores)
+        output += "-- Program Id END--\n"
+        return output
+
+
+class ButtonClosing():
+    tipo = 157
+    objeto = 201
+    length = 1
+
+    def __init__(self):
+        self.buttonclosing = None
+        self.valores = None
+
+    def from_hex(self, data):
+        self.buttonclosing = struct.unpack("B", data[0:1])[0]
+        enabled = (self.buttonclosing & 0x03) > 1 and True or False
+
+        self.valores = enabled
+
+        return self.valores
+
+    def __repr__(self):
+        output = "\n-- Button Closing BEGIN--\n"
+        output += "Enabled {} ({})\n".format(self.valores, self.buttonclosing)
+        output += "-- Button Closing END--\n"
+        return output
 
 
 class TotalizadoresInstantaneos():
