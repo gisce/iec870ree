@@ -72,9 +72,9 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         #for resp in app_layer.read_absolute_values(datetime.datetime(2020,2,1,0,0,0), datetime.datetime.now(), register='profiles'):
         #    logging.info("Daily billings response {}".format(resp))
         #INCREMENTAL (123)
-        logging.info("LEER CURVA")
-        for resp in app_layer.read_incremental_values(datetime.datetime(2021, 4, 18, 0, 0, 0), datetime.datetime.now(), register='profiles'):
-            logging.info("Profile response {}".format(resp))
+        #logging.info("LEER CURVA")
+        #for resp in app_layer.read_incremental_values(datetime.datetime(2021, 4, 18, 0, 0, 0), datetime.datetime.now(), register='profiles'):
+        #    logging.info("Profile response {}".format(resp))
 
         #### SET TIME ####
         #resp = app_layer.read_datetime()
@@ -94,6 +94,23 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         #for resp in app_layer.get_info():
         #    logging.info("read response get_info {}".format(resp))
 
+        #### REGISTRATOR RM2 VALUES (Extended)
+        logging.info("LEER VALORES REGISTRADOR RM2")
+        instant_objects = [
+            'battery',
+            'timesavingchange',
+            'minclosetime',
+            'alarm',
+            'voltagefault',
+            'curveperiod',
+            'traforatio',
+            'clocksincro',
+            'programid',
+            'buttonclosing'
+        ]
+        logging.info("Get registrator values RM 2")
+        resp = app_layer.ext_read_rm2_values(objects=instant_objects)
+        print(resp.content)
 
         #### INSTANT_VALUES_OBJECTS name or code (Extended)
         # logging.info("LEER VALORES INSTANTANEOS {}")
@@ -110,9 +127,9 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         # resp = app_layer.ext_read_contract_tariff_info(register=134, objects=tariff_objects)
         # print(resp.content)
 
-        logging.info("LEER DIAS FESTIVOS")
-        resp = app_layer.read_holiday_days()
-        print(resp.content)
+        #logging.info("LEER DIAS FESTIVOS")
+        #resp = app_layer.read_holiday_days()
+        #print(resp.content)
 
     except Exception as e:
         print(e)
