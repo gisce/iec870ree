@@ -40,6 +40,15 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         resp = app_layer.get_info()
         logging.info("read response get_info{}".format(resp.content))
  
+        event_groups = (52,53, 54, 55, 128, 129, 131, 132, 133) 
+
+        for event_group in event_groups:
+            try:
+                for resp in app_layer.read_events(event_group):
+                    logging.info("Get EVENTS {}: {}".format(event_group, resp.content))
+            except:
+                logging.info("WARNING: event {} not available".format(event_group)) 
+
         ##### CURRENT MEASURE (133)
         #logging.info("LEER CIERRES ACTUALES")
         #for resp in app_layer.current_tariff_info(register=1):
@@ -120,12 +129,12 @@ def run_example(ip, port, der, dir_pm, clave_pm):
         # print(resp.content)
         #
         # #### PROGRAMED TARIFFS (Extended)
-        # logging.info("LEER TARIFA PROGRAMADA")
-        # #tariff_objects = ['special_days', 'seasons', 'latent_activation_date', 'current_period']
-        # tariff_objects = ['seasons']
+        #logging.info("LEER TARIFA PROGRAMADA")
+        #tariff_objects = ['special_days', 'seasons', 'latent_activation_date', 'current_period']
+        #tariff_objects = ['special_days']
         # logging.info("Get programmed tariff")
-        # resp = app_layer.ext_read_contract_tariff_info(register=134, objects=tariff_objects)
-        # print(resp.content)
+        #resp = app_layer.ext_read_contract_tariff_info(register=134, objects=tariff_objects)
+        #print(resp.content)
 
         #logging.info("LEER DIAS FESTIVOS")
         #resp = app_layer.read_holiday_days()

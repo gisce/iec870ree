@@ -7,6 +7,7 @@ from .app_asdu import *
 from .app_asdu import INSTANT_VALUES_OBJECTS, REGISTRADOR_RM2_OBJECTS
 import math
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 from six import with_metaclass
 
@@ -53,6 +54,8 @@ EXT_TARIFF_OBJECTS = {
     'latent_activation_date': 196,
     'current_period': 197
 }
+
+EVENT_ADDRESS_REGISTERS = (52, 53, 54, 55, 128, 129, 131, 132, 133)
 
 
 def parse_asdu(trama):
@@ -165,7 +168,7 @@ class AppLayer(with_metaclass(ABCMeta)):
                 continue
             if asdu_resp.causa_tm == 0x05 and asdu_resp.tipo in [
                 M_TA_VC_2.type, M_TA_VM_2.type, M_IT_TK_2.type, M_IT_TG_2.type,
-                M_IB_TK_2.type]:
+                M_IB_TK_2.type, M_SP_TA_2.type]:
                 logger.info("Received request for next batch of information")
             elif asdu_resp.causa_tm == 0x05:
                 logger.info("Request or asked")
@@ -343,6 +346,24 @@ class AppLayer(with_metaclass(ABCMeta)):
             if isinstance(resp, VariableAsdu) and resp.tipo == M_DF_NA_2.type:
                 return resp
 
+    def read_events(self, register=52, date_from=None, date_to=None):
+        # 102 Get Events between dates
+        if date_from is None:
+            date_from = (
+                    # datetime.now() + relativedelta(day=1, hour=0, minute=0, second=0, microsecond=0)
+                    datetime.now() - relativedelta(days=30, hour=0, minute=0, second=0, microsecond=0)
+            )
+        if date_to is None:
+            date_to = datetime.now()
+
+        asdu = self.create_asdu_request(
+            C_SP_NB_2(date_from=date_from, date_to=date_to), register
+        )
+        resps = list(self.process_request(asdu))
+        for resp in self.process_requestresponse():
+            if isinstance(resp, VariableAsdu): # and resp.tipo == M_DF_NA_2.type:
+                yield resp
+
     # Protocol extension
     def ext_read_rm2_values(self, register=0, objects=['traforatio']):
         # 157
@@ -419,7 +440,10 @@ class AppLayer(with_metaclass(ABCMeta)):
         asdu.c.fcv = 1
         asdu.c.cf = 3
         asdu.der = self.link_layer.der
-        asdu.cualificador_ev = math.ceil(getattr(user_data, 'data_length', 0x06)/0x06)
+        if user_data.type in (102,):
+            asdu.cualificador_ev = 0
+        else:
+            asdu.cualificador_ev = math.ceil(getattr(user_data, 'data_length', 0x06)/0x06)
         asdu.causa_tm = getattr(user_data, 'causa_tm', 6)
         asdu.dir_pm = self.link_layer.dir_pm
         # registro> 11 curvas horarias, 12 cuartohorarias, 21 resumenes diarios
