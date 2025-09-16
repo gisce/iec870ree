@@ -15,7 +15,7 @@ with open('README.rst') as f:
 
 setup(
     name="iec870ree",
-    version="0.13.0",
+    version="0.14.0",
     metadata_version="1.0",
     author="GISCE-TI, S.L.",
     author_email="devel@gisce.net",
