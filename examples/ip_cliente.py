@@ -1,6 +1,9 @@
 import sys
 import logging
 from os.path import dirname, realpath, sep, pardir
+
+from iec870ree.events import get_event_description
+
 library_path = dirname(realpath(__file__)) + sep + pardir
 sys.path.append(library_path)
 
@@ -42,12 +45,31 @@ def run_example(ip, port, der, dir_pm, clave_pm):
  
         event_groups = (52,53, 54, 55, 128, 129, 131, 132, 133) 
 
+        values = []
         for event_group in event_groups:
             try:
                 for resp in app_layer.read_events(event_group):
+                    values.append(resp)
                     logging.info("Get EVENTS {}: {}".format(event_group, resp.content))
             except:
-                logging.info("WARNING: event {} not available".format(event_group)) 
+                logging.info("WARNING: event {} not available".format(event_group))
+
+            res = {
+                'Events': []
+            }
+            for event_info in values:
+                for event in event_info.content.valores:
+                    event_desc = get_event_description(event)
+                    record = {
+                        'Date': event.date.datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                        'Season': {'1': 'S', '0': 'W'}[str(event.date.SU)],
+                        'SPA': event.SPA,
+                        'SPI': event.SPI,
+                        'SPQ': event.SPQ,
+                        'Description': event_desc,
+                        'EventDir': event_info.dir_registro
+                    }
+                    res['Events'].append(record)
 
         ##### CURRENT MEASURE (133)
         #logging.info("LEER CIERRES ACTUALES")
