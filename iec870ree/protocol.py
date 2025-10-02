@@ -361,7 +361,7 @@ class AppLayer(with_metaclass(ABCMeta)):
         )
         resps = list(self.process_request(asdu))
         for resp in self.process_requestresponse():
-            if isinstance(resp, VariableAsdu): # and resp.tipo == M_DF_NA_2.type:
+            if isinstance(resp, VariableAsdu) and resp.tipo == M_SP_TA_2.type:
                 yield resp
 
     # Protocol extension
