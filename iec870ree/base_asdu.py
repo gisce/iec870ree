@@ -27,6 +27,8 @@ class AsduParser:
             self.asdu = FixedAsdu()
         elif init_byte == VariableAsdu.INIT_BYTE:
             self.asdu = VariableAsdu()
+        elif init_byte == MonsolAsdu.INIT_BYTE:
+            self.asdu = MonsolAsdu()
         else:
             raise ParserException("Wrong Init Byte {}".format(init_byte))
 
@@ -260,3 +262,41 @@ class Flags_CampoC(ctypes.Union):
         ("asByte", c_uint8)
     ]
     _anonymous_ = ("b")
+
+
+class MonsolAsdu:
+
+    INIT_BYTE = 0x01
+    EXTRA_LENGTH = 0x05
+
+    tipo = 0x0
+
+    def __init__(self):
+        self.buffer = bytearray()
+        self.length = 0
+
+    def append(self, bt):
+        self.buffer.append(bt)
+        if len(self.buffer) == 3:
+            self.length = bt
+
+        if self.length != 0 and self.completed:
+            self.parse()
+            return True
+
+        return False
+
+    @property
+    def completed(self):
+        return self.length + MonsolAsdu.EXTRA_LENGTH == len(self.buffer)
+
+    def parse(self):
+        """
+        First byte 0x01
+        Second byte 0x04
+        Third byte length
+        data length bytes
+        last two bytes checksum
+        """
+        if self.buffer[0] != MonsolAsdu.INIT_BYTE:
+            raise ParserException()
